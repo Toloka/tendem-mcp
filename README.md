@@ -2,6 +2,8 @@
 
 MCP server for [Tendem](https://tendem.ai/) - a platform for human-in-the-loop data tasks.
 
+To manage API keys, log into your Tendem account and visit https://agent.tendem.ai/tokens
+
 ## Quickstart
 
 ### Claude Code
