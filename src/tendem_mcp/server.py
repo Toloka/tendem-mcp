@@ -18,7 +18,7 @@ from tendem_mcp.models import (
 
 mcp = FastMCP('tendem-mcp')
 
-DEFAULT_API_URL = 'https://tendem.dev/api/v0'
+DEFAULT_API_URL = 'https://api.tendem.ai/api/v0'
 
 
 @cache
