@@ -1,6 +1,6 @@
 [project]
 name = "tendem-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for Tendem task management API"
 requires-python = ">=3.13,<3.14"
 readme = "README.md"
@@ -91,7 +91,7 @@ select = [
 
 [tool.basedpyright]
 pythonVersion = "3.13"
-mode = "strict"
+typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
