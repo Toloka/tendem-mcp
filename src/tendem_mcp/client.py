@@ -74,12 +74,7 @@ def _raise_for_status(response: httpx.Response) -> None:
 
 async def _log_request(request: httpx.Request) -> None:
     """Log outgoing request details."""
-    logger.debug(
-        'Request: %s %s',
-        request.method,
-        request.url,
-    )
-    logger.debug('Request headers: %s', dict(request.headers))
+    logger.debug('Request: %s %s', request.method, request.url)
     if request.content:
         logger.debug('Request body: %s', request.content.decode())
 
@@ -87,12 +82,7 @@ async def _log_request(request: httpx.Request) -> None:
 async def _log_response(response: httpx.Response) -> None:
     """Log incoming response details."""
     _ = await response.aread()
-    logger.debug(
-        'Response: %s %s',
-        response.status_code,
-        response.url,
-    )
-    logger.debug('Response headers: %s', dict(response.headers))
+    logger.debug('Response: %s %s', response.status_code, response.url)
     logger.debug('Response body: %s', response.text)
 
 
