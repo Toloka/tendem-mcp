@@ -1,6 +1,6 @@
 [project]
 name = "tendem-mcp"
-version = "0.1.4"
+version = "0.1.5"
 description = "MCP server for Tendem task management API"
 requires-python = ">=3.13,<3.14"
 readme = "README.md"
@@ -18,7 +18,7 @@ classifiers = [
 dependencies = [
     "fastmcp>=2.0",
     "httpx>=0.28",
-    "pydantic>=2.0",
+    "pydantic>=2.8",
 ]
 
 [project.urls]

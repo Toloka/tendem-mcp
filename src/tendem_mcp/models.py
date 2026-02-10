@@ -4,27 +4,16 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, BeforeValidator
+from pydantic import AwareDatetime, BaseModel
+from pydantic.experimental.pipeline import validate_as
 
-
-def _ensure_timezone(v: Any) -> Any:
-    """Ensure datetime values have timezone info, defaulting to UTC.
-
-    Some API responses may return naive datetime strings (without timezone).
-    MCP clients validate output against JSON Schema `format: "date-time"` (RFC 3339),
-    which requires timezone info. This validator ensures all datetimes are timezone-aware.
-    """
-    if isinstance(v, str) and '+' not in v and 'Z' not in v and not v.endswith('z'):
-        return v + 'Z'
-    if isinstance(v, datetime) and v.tzinfo is None:
-        return v.replace(tzinfo=UTC)
-    return v
-
-
-UtcDatetime = Annotated[AwareDatetime, BeforeValidator(_ensure_timezone)]
+UtcDatetime = Annotated[
+    AwareDatetime,
+    validate_as(datetime).transform(lambda v: v.replace(tzinfo=v.tzinfo or UTC)),
+]
 
 
 class McpTaskStatus(StrEnum):
