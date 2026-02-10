@@ -366,6 +366,24 @@ async def test_context_manager() -> None:
 
 
 @pytest.mark.asyncio
+@respx.mock
+async def test_naive_datetime_gets_utc_timezone(client: TendemClient) -> None:
+    """Test that naive datetimes from API are treated as UTC."""
+    response_data = _task_response(created_at='2024-01-15T10:30:00')
+    _ = respx.post(f'{BASE_URL}/tasks').mock(
+        return_value=httpx.Response(201, json=response_data),
+    )
+
+    result = await client.create_task('Test')
+
+    assert result.created_at.tzinfo is not None
+    assert result.created_at.year == 2024
+    # Verify serialization includes timezone (RFC 3339 compliant)
+    serialized = result.model_dump_json()
+    assert '+00:00' in serialized or 'Z' in serialized
+
+
+@pytest.mark.asyncio
 async def test_base_url_trailing_slash_stripped() -> None:
     """Test that trailing slash in base_url is stripped."""
     test_client = TendemClient(api_key=API_KEY, base_url='https://api.example.com/')
