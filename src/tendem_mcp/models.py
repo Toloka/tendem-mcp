@@ -1,12 +1,30 @@
 """Pydantic models for Tendem MCP API."""
 
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import AwareDatetime, BaseModel, BeforeValidator
+
+
+def _ensure_timezone(v: Any) -> Any:
+    """Ensure datetime values have timezone info, defaulting to UTC.
+
+    Some API responses may return naive datetime strings (without timezone).
+    MCP clients validate output against JSON Schema `format: "date-time"` (RFC 3339),
+    which requires timezone info. This validator ensures all datetimes are timezone-aware.
+    """
+    if isinstance(v, str) and '+' not in v and 'Z' not in v and not v.endswith('z'):
+        return v + 'Z'
+    if isinstance(v, datetime) and v.tzinfo is None:
+        return v.replace(tzinfo=UTC)
+    return v
+
+
+UtcDatetime = Annotated[AwareDatetime, BeforeValidator(_ensure_timezone)]
 
 
 class McpTaskStatus(StrEnum):
@@ -24,7 +42,7 @@ class McpApprovalRequestInfo(BaseModel):
     """Approval request information for task approval."""
 
     price_usd: Decimal
-    created_at: datetime
+    created_at: UtcDatetime
 
 
 class McpTaskView(BaseModel):
@@ -36,7 +54,7 @@ class McpTaskView(BaseModel):
     task_id: UUID
     name: str
     status: McpTaskStatus
-    created_at: datetime
+    created_at: UtcDatetime
     approval_request_info: McpApprovalRequestInfo | None = None
 
 
@@ -55,7 +73,7 @@ class McpCanvasView(BaseModel):
 
     canvas_id: UUID
     version_id: UUID
-    created_at: datetime
+    created_at: UtcDatetime
     content: str
 
 
@@ -72,7 +90,7 @@ class McpTaskResultsView(BaseModel):
 class McpCanvasToolResult(BaseModel):
     """Single canvas result for tool response (without internal IDs)."""
 
-    created_at: datetime
+    created_at: UtcDatetime
     content: str
 
 
