@@ -1,4 +1,4 @@
-name: Release to PyPI
+name: Publish to PyPI and MCP Registry
 
 on:
   release:
