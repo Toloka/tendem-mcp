@@ -1,6 +1,6 @@
 [project]
 name = "tendem-mcp"
-version = "0.1.7"
+version = "0.1.8"
 description = "MCP server for Tendem task management API"
 requires-python = ">=3.13,<3.14"
 readme = "README.md"
