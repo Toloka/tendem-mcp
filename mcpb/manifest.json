@@ -1,0 +1,98 @@
+{
+  "manifest_version": "0.4",
+  "name": "tendem-mcp",
+  "display_name": "Tendem",
+  "version": "0.0.0",
+  "description": "AI + Human Agent to get tasks done. Create, manage, and track tasks powered by Tendem.",
+  "long_description": "Delegate tasks to human experts via Tendem. Use when the user needs work done by a real person — research, data collection, content creation, translations, or any task requiring human judgment.\n\nWorkflow: create_task → poll get_task until AWAITING_APPROVAL → review price → approve_task → human works (may take hours) → get_task_result.\n\nResults are returned as text canvases. File artifacts (images, documents) can be downloaded with download_artifact.\n\nTo get your API key, log into your Tendem account and visit https://agent.tendem.ai/tokens",
+  "author": {
+    "name": "Toloka",
+    "url": "https://tendem.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toloka/tendem-mcp"
+  },
+  "homepage": "https://tendem.ai",
+  "support": "https://github.com/toloka/tendem-mcp/issues",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "${__dirname}",
+        "run",
+        "src/server.py"
+      ],
+      "env": {
+        "TENDEM_API_KEY": "${user_config.TENDEM_API_KEY}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "list_tasks",
+      "description": "List all Tendem tasks with their statuses.\n\nArgs:\n    page_number: Page number (0-indexed).\n    page_size: Number of results per page (1-100).\n\nReturns:\n    Paginated list of Tendem tasks."
+    },
+    {
+      "name": "create_task",
+      "description": "Create a new Tendem task for a human expert.\n\nPoll get_task until AWAITING_APPROVAL to see the price.\n\nAfter creation, poll with get_task until status is AWAITING_APPROVAL to see the price\n(may take up to 10 minutes).\n\nArgs:\n    text: The task description/prompt to execute.\n\nReturns:\n    The created task."
+    },
+    {
+      "name": "get_task",
+      "description": "Get Tendem task status and details. Use to poll after create_task or approve_task.\n\nUse to poll task status. After create_task, wait for AWAITING_APPROVAL to see price.\nAfter approve_task, a human expert works on the task until COMPLETED (may take hours).\n\nArgs:\n    task_id: The Tendem task ID (UUID) to get.\n\nReturns:\n    The Tendem task including status and approval info if awaiting approval."
+    },
+    {
+      "name": "approve_task",
+      "description": "Approve a Tendem task and its price. A human expert will begin working (may take hours).\n\nCall after reviewing the price in AWAITING_APPROVAL status. A human expert will then\nwork on the task until it reaches COMPLETED status (may take hours).\n\nArgs:\n    task_id: The Tendem task ID (UUID) to approve.\n\nReturns:\n    Confirmation message."
+    },
+    {
+      "name": "cancel_task",
+      "description": "Cancel a Tendem task. Costs are not refunded after approval.\n\nCan be called at any time. Note: costs are not refunded if cancelled after approval.\n\nArgs:\n    task_id: The Tendem task ID (UUID) to cancel.\n\nReturns:\n    Confirmation message."
+    },
+    {
+      "name": "get_task_result",
+      "description": "Get the final result text from a completed Tendem task.\n\nArgs:\n    task_id: The Tendem task ID (UUID).\n\nReturns:\n    The content of the latest canvas, or an error if task is not completed."
+    },
+    {
+      "name": "get_all_task_results",
+      "description": "Get all Tendem task results including intermediate drafts, from latest to oldest.\n\nArgs:\n    task_id: The Tendem task ID (UUID) to get results for.\n    page_number: Page number (0-indexed).\n    page_size: Number of results per page (1-100).\n\nReturns:\n    Paginated Tendem task results with canvas content."
+    },
+    {
+      "name": "download_artifact",
+      "description": "Download a file artifact (image, document) from Tendem task results and save locally.\n\nArtifact references appear in canvas content as:\n```agents-reference\naba://<artifact_id>\n```\n\nArgs:\n    task_id: The Tendem task ID (UUID).\n    artifact_id: The artifact ID (UUID) from the agents-reference block.\n    path: The file path where the artifact should be saved.\n\nReturns:\n    Confirmation message with the saved file path and size."
+    }
+  ],
+  "user_config": {
+    "TENDEM_API_KEY": {
+      "type": "string",
+      "title": "Tendem API Key",
+      "description": "Your Tendem API key. Get one at https://agent.tendem.ai/tokens",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "python": ">=3.13"
+    }
+  },
+  "keywords": [
+    "tendem",
+    "tasks",
+    "ai",
+    "human-agent",
+    "task-management"
+  ],
+  "license": "Apache-2.0",
+  "privacy_policies": [
+    "https://tendem.ai/privacy"
+  ]
+}

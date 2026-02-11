@@ -34,7 +34,7 @@ def get_client() -> TendemClient:
 
 @mcp.tool
 async def list_tasks(page_number: int, page_size: int) -> McpTaskListView:
-    """List all Tendem tasks for the current user.
+    """List all Tendem tasks with their statuses.
 
     Args:
         page_number: Page number (0-indexed).
@@ -48,7 +48,9 @@ async def list_tasks(page_number: int, page_size: int) -> McpTaskListView:
 
 @mcp.tool
 async def create_task(text: str) -> McpTaskView:
-    """Create a new Tendem task with the given text.
+    """Create a new Tendem task for a human expert.
+
+    Poll get_task until AWAITING_APPROVAL to see the price.
 
     After creation, poll with get_task until status is AWAITING_APPROVAL to see the price
     (may take up to 10 minutes).
@@ -64,7 +66,7 @@ async def create_task(text: str) -> McpTaskView:
 
 @mcp.tool
 async def get_task(task_id: str) -> McpTaskView:
-    """Get a Tendem task by ID.
+    """Get Tendem task status and details. Use to poll after create_task or approve_task.
 
     Use to poll task status. After create_task, wait for AWAITING_APPROVAL to see price.
     After approve_task, a human expert works on the task until COMPLETED (may take hours).
@@ -80,7 +82,7 @@ async def get_task(task_id: str) -> McpTaskView:
 
 @mcp.tool
 async def approve_task(task_id: str) -> str:
-    """Approve a Tendem task that is awaiting approval.
+    """Approve a Tendem task and its price. A human expert will begin working (may take hours).
 
     Call after reviewing the price in AWAITING_APPROVAL status. A human expert will then
     work on the task until it reaches COMPLETED status (may take hours).
@@ -97,7 +99,7 @@ async def approve_task(task_id: str) -> str:
 
 @mcp.tool
 async def cancel_task(task_id: str) -> str:
-    """Cancel a Tendem task.
+    """Cancel a Tendem task. Costs are not refunded after approval.
 
     Can be called at any time. Note: costs are not refunded if cancelled after approval.
 
@@ -113,7 +115,7 @@ async def cancel_task(task_id: str) -> str:
 
 @mcp.tool
 async def get_task_result(task_id: str) -> str:
-    """Get the latest result from a completed Tendem task.
+    """Get the final result text from a completed Tendem task.
 
     Args:
         task_id: The Tendem task ID (UUID).
@@ -137,7 +139,7 @@ async def get_all_task_results(
     page_number: int,
     page_size: int,
 ) -> McpAllTaskResultsToolResult:
-    """Get all results (including intermediate) for a Tendem task, from latest to oldest.
+    """Get all Tendem task results including intermediate drafts, from latest to oldest.
 
     Args:
         task_id: The Tendem task ID (UUID) to get results for.
@@ -162,7 +164,7 @@ async def get_all_task_results(
 
 @mcp.tool
 async def download_artifact(task_id: str, artifact_id: str, path: str) -> str:
-    """Download artifact content from a Tendem task and save to a file.
+    """Download a file artifact (image, document) from Tendem task results and save locally.
 
     Artifact references appear in canvas content as:
     ```agents-reference
