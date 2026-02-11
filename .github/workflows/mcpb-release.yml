@@ -1,4 +1,4 @@
-name: Build and Release MCPB
+name: Build MCPB Desktop Extension
 
 on:
   release:

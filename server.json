@@ -1,13 +1,25 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.github.toloka/tendem-mcp",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Toloka/tendem-mcp",
   "description": "AI + Human Agent platform for getting tasks done. Create, manage, and track tasks powered by Tendem.",
   "version": "0.1.5",
   "packages": [
     {
-      "registry_type": "pip",
+      "registryType": "pypi",
       "identifier": "tendem-mcp",
-      "version": "0.1.5"
+      "version": "0.1.5",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "TENDEM_API_KEY",
+          "description": "Tendem API key. Get one at https://agent.tendem.ai/tokens",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
     }
   ]
 }
