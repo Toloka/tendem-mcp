@@ -1,0 +1,40 @@
+name: Build and Release MCPB
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-mcpb:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update mcpb version from release tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd mcpb
+          jq --arg v "$VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
+          sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
+          echo "Building MCPB version: $VERSION"
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Sync tools from server
+        run: uv run python scripts/gen_manifest_tools.py
+
+      - name: Build MCPB
+        run: |
+          cd mcpb
+          npx @anthropic-ai/mcpb pack . tendem-mcp.mcpb
+
+      - name: Upload MCPB to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mcpb/tendem-mcp.mcpb

@@ -1,0 +1,8 @@
+[project]
+name = "tendem-mcp-extension"
+version = "0.0.0"
+description = "Tendem MCP Desktop Extension"
+requires-python = ">=3.13"
+dependencies = [
+    "tendem-mcp>=0.1.5",
+]

@@ -1,8 +1,22 @@
+<!-- mcp-name: io.github.toloka/tendem-mcp -->
 # tendem-mcp
 
 MCP server for [Tendem](https://tendem.ai/), AI + Human Agent to get tasks done.
 
 To manage API keys, log into your Tendem account and visit https://agent.tendem.ai/tokens
+
+## Desktop Extension (One-Click Install)
+
+1. Download the latest `tendem-mcp.mcpb` from [Releases](https://github.com/toloka/tendem-mcp/releases)
+2. Double-click the file or drag it into Claude Desktop
+3. Enter your API key when prompted (get one at https://agent.tendem.ai/tokens)
+
+### Building from source
+
+```bash
+cd mcpb
+npx @anthropic-ai/mcpb pack . tendem-mcp.mcpb
+```
 
 ## Quickstart
 
