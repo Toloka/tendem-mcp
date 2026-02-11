@@ -1,4 +1,4 @@
-<!-- mcp-name: io.github.toloka/tendem-mcp -->
+<!-- mcp-name: io.github.Toloka/tendem-mcp -->
 # tendem-mcp
 
 MCP server for [Tendem](https://tendem.ai/), AI + Human Agent to get tasks done.
