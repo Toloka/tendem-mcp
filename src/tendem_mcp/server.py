@@ -57,22 +57,36 @@ async def create_task(text: str) -> McpTaskView:
 
     When creating a task consider available human expert specializations:
     **1. data_scraping**
-    * Task types: High-volume data extraction, scraping, cleansing and enrichment (web, social media, or document sets).
-    * Threshold: MUST be used when manual effort would exceed ~4 hours OR when tools like Selenium/BS4/Apify are required.
+    * Task types: High-volume data extraction, scraping, cleansing and
+    enrichment (web, social media, or document sets).
+    * Threshold: MUST be used when manual effort would exceed ~4 hours
+    OR when tools like Selenium/BS4/Apify are required.
     **2. software_development**
-    * Task types: Debugging/refactoring existing code. Writing automation scripts. Building full-stack apps (Python, Node, TS). Building/adding features to WordPress, Woocommerce, Shopify based websites and stores.
+    * Task types: Debugging/refactoring existing code. Writing automation
+    scripts. Building full-stack apps (Python, Node, TS).
+    Building/adding features to WordPress, Woocommerce, Shopify based
+    websites and stores.
     **3. design**
-    * Task types: Logos, Branding, Presentations (decks), Print Materials (flyers/brochures/billboards), and Packaging.
+    * Task types: Logos, Branding, Presentations (decks), Print Materials
+    (flyers/brochures/billboards), and Packaging.
     **4. copywriting**
-    * Definition: Writing where style, tone, and usage of language is important.
-    * Task types: SEO Writing, Newsletters, Press Releases, Case Studies, Ad Copy, Landing Page texts, Social Media posts, UX Writing, Email campaigns, Proofreading, editing, refining and humanizing ai text.
+    * Definition: Writing where style, tone, and usage of language is
+    important.
+    * Task types: SEO Writing, Newsletters, Press Releases, Case Studies,
+    Ad Copy, Landing Page texts, Social Media posts, UX Writing, Email
+    campaigns, Proofreading, editing, refining and humanizing ai text.
     **5. general**
-    * Definition: Expert level knowledge not required, good at attention to detail, using software and ai tools.
-    * Task types: Manual data collection, enrichment, cleaning and analysis (incl. lead generation, contact list building), market research, formatting documents, converting files.
+    * Definition: Expert level knowledge not required, good at attention
+    to detail, using software and ai tools.
+    * Task types: Manual data collection, enrichment, cleaning and
+    analysis (incl. lead generation, contact list building), market
+    research, formatting documents, converting files.
 
     Avoid tasks that:
-    **Required Regulated Expertise:** Medical diagnosis, legal advice, PhD-level research, or real-money investment advice.
-    **Required access to private/internal systems without providing credentials** e.g., "Check my email"
+    **Required Regulated Expertise:** Medical diagnosis, legal advice,
+    PhD-level research, or real-money investment advice.
+    **Required access to private/internal systems without providing
+    credentials** e.g., "Check my email"
 
     Args:
         text: The task description/prompt to execute.
