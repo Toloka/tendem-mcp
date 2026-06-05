@@ -3,7 +3,7 @@
 
 > [!WARNING]
 > This repository contains the legacy local MCP server and should no longer be used.
-> Use the remote MCP server instead: https://mcp.tendem.ai/mcp
+> Use the remote MCP server instead: https://agent.tendem.ai/mcp
 
 MCP server for [Tendem](https://tendem.ai/), AI + Human Agent to get tasks done.
 
