@@ -1,0 +1,58 @@
+# Tendem MCP
+
+> Official plugin distribution for the hosted Tendem MCP server. Install Tendem in your AI client to delegate tasks to vetted human experts via the Model Context Protocol — submit work in natural language, get a transparent quote, approve, and receive verified results as files and reports.
+
+This repository contains per-client plugin manifests, skills, rules, hooks, and two small marketplaces. It does **not** contain the MCP server implementation — the server is hosted at `https://mcp.tendem.ai/mcp`. Pair this repo with the [Tendem product page](https://tendem.ai) and the [MCP documentation](https://modelcontextprotocol.io) for the full picture.
+
+## Getting started
+
+- [README](https://github.com/Toloka/tendem-mcp/blob/main/README.md): What Tendem is, what it can do, and how to install a client.
+- [Tendem app](https://agent.tendem.ai): Sign up, run tasks, and download results.
+- [Overview article](https://toloka.ai/blog/connect-your-ai-agent-to-human-experts-via-mcp/): How connecting an AI agent to human experts via MCP works.
+
+## Plugin manifests
+
+Per-client install manifests. Each surfaces the same hosted MCP server (`https://mcp.tendem.ai/mcp`) shaped for a specific client.
+
+- [Claude Code plugin manifest](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/.claude-plugin/plugin.json): For Claude Code (also serves Cursor and Copilot CLI via the manifests below).
+- [OpenAI Codex plugin manifest](https://github.com/Toloka/tendem-mcp/blob/main/codex/tendem/.codex-plugin/plugin.json): For OpenAI Codex / ChatGPT.
+- [Cursor plugin manifest](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/.cursor-plugin/plugin.json): For Cursor.
+- [GitHub Copilot CLI plugin manifest](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/.github/plugin/plugin.json): For the Copilot CLI.
+- [Gemini CLI extension manifest](https://github.com/Toloka/tendem-mcp/blob/main/gemini-extension.json): `gemini-extension.json` for `gemini extensions install` from the GitHub URL.
+- [Kiro Power](https://github.com/Toloka/tendem-mcp/tree/main/tendem-power): Steering bundle + MCP config for Kiro.
+- [MCP server config](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/.mcp.json): Generic `mcpServers` declaration with `"type": "http"`.
+- [MCP Registry manifest](https://github.com/Toloka/tendem-mcp/blob/main/server.json): `server.json` for the official MCP Registry catalog.
+
+## Marketplaces
+
+Install straight from this repo:
+
+- [Claude Code marketplace](https://github.com/Toloka/tendem-mcp/blob/main/.claude-plugin/marketplace.json): `/plugin marketplace add Toloka/tendem-mcp` then `/plugin install tendem@tendem-mcp`.
+- [Codex marketplace](https://github.com/Toloka/tendem-mcp/blob/main/.agents/plugins/marketplace.json): `codex plugin marketplace add Toloka/tendem-mcp` then `codex plugin add tendem@tendem-mcp`.
+
+## Skills and steering
+
+Steering for AI assistants that drives the Tendem task lifecycle.
+
+- [tendem-tasks (Claude/Cursor/Copilot)](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/skills/tendem-tasks/SKILL.md): End-to-end path — create, scope, approve, poll, fetch — with polling discipline and negotiation rules.
+- [tendem-tasks (Codex/ChatGPT)](https://github.com/Toloka/tendem-mcp/blob/main/codex/tendem/skills/tendem-tasks/SKILL.md): Same lifecycle, with Codex-specific file-upload guidance.
+- [tendem-lifecycle rule (Cursor)](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/rules/tendem-lifecycle.mdc): Always-apply lifecycle + safety rules.
+- [tendem-watcher agent](https://github.com/Toloka/tendem-mcp/blob/main/plugins/tendem/agents/tendem-watcher.md): Background watcher that pings the user when a task needs them.
+
+## Agent steering
+
+- [AGENTS.md](https://github.com/Toloka/tendem-mcp/blob/main/AGENTS.md): What this repo is, why a user wants it, and how to install per client.
+
+## Documentation and support
+
+- [tendem.ai](https://tendem.ai): Product page.
+- [agent.tendem.ai](https://agent.tendem.ai): The Tendem app.
+- [Privacy Policy](https://tendem.ai/legal/privacy)
+- [Terms of Use](https://tendem.ai/legal/terms)
+- [Help center](https://tolokahelp.zendesk.com/hc/en-us)
+
+## Optional
+
+- [LICENSE](https://github.com/Toloka/tendem-mcp/blob/main/LICENSE): Apache-2.0.
+- [CONTRIBUTING.md](https://github.com/Toloka/tendem-mcp/blob/main/CONTRIBUTING.md): How to contribute.
+- [CLAUDE.md](https://github.com/Toloka/tendem-mcp/blob/main/CLAUDE.md): Claude-specific guidance file (mirrors AGENTS.md).

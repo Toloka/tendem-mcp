@@ -1,0 +1,21 @@
+{
+  "name": "tendem-mcp",
+  "interface": {
+    "displayName": "Tendem"
+  },
+  "plugins": [
+    {
+      "name": "tendem",
+      "source": {
+        "source": "local",
+        "path": "./codex/tendem"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity",
+      "description": "Seamless access to the Tendem hybrid AI + human task service: bundles the MCP connector and teaches the agent the full task lifecycle (create, scope, approve, poll, fetch results and files)."
+    }
+  ]
+}

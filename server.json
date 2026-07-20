@@ -1,25 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Toloka/tendem-mcp",
-  "description": "AI + Human Agent platform for getting tasks done. Create, manage, and track tasks powered by Tendem.",
-  "version": "0.1.9",
-  "packages": [
+  "title": "Tendem MCP server",
+  "description": "Delegate tasks to vetted human experts. Submit work in natural language; Tendem scopes it, quotes a transparent price, and — after your approval — returns verified results as files and reports.",
+  "websiteUrl": "https://tendem.ai",
+  "repository": {
+    "url": "https://github.com/Toloka/tendem-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
     {
-      "registryType": "pypi",
-      "identifier": "tendem-mcp",
-      "version": "0.1.9",
-      "runtimeHint": "uvx",
-      "transport": {
-        "type": "stdio"
-      },
-      "environmentVariables": [
-        {
-          "name": "TENDEM_API_KEY",
-          "description": "Tendem API key. Get one at https://agent.tendem.ai/tokens",
-          "isRequired": true,
-          "isSecret": true
-        }
-      ]
+      "type": "streamable-http",
+      "url": "https://mcp.tendem.ai/mcp"
     }
   ]
 }
