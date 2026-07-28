@@ -2,7 +2,7 @@
   "mcpServers": {
     "tendem": {
       "type": "http",
-      "url": "https://mcp.tendem.ai/mcp"
+      "url": "https://mcp.tendem.ai/mcp?utm_source=claude_code&utm_medium=plugin"
     }
   }
 }
