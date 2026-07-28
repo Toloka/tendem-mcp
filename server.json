@@ -3,7 +3,7 @@
   "name": "io.github.Toloka/tendem-mcp",
   "title": "Tendem MCP server",
   "description": "Delegate tasks to vetted human experts - research, writing, analysis, and data work.",
-  "websiteUrl": "https://tendem.ai?utm_source=mcp-registry&utm_medium=referral",
+  "websiteUrl": "https://tendem.ai?utm_source=official_mcp_registry&utm_medium=mcp_listing",
   "repository": {
     "url": "https://github.com/Toloka/tendem-mcp",
     "source": "github"
@@ -12,7 +12,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.tendem.ai/mcp?utm_source=mcp-registry&utm_medium=referral"
+      "url": "https://mcp.tendem.ai/mcp?utm_source=official_mcp_registry&utm_medium=mcp_listing"
     }
   ]
 }
