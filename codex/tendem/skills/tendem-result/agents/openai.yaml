@@ -1,0 +1,6 @@
+interface:
+  display_name: "Tendem: fetch result"
+  short_description: "Fetch and present a completed Tendem task's result"
+
+policy:
+  allow_implicit_invocation: false

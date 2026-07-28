@@ -1,0 +1,6 @@
+interface:
+  display_name: "Tendem: submit a task"
+  short_description: "Submit a new task to Tendem and drive it through scoping"
+
+policy:
+  allow_implicit_invocation: false

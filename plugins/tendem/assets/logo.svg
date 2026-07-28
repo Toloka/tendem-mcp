@@ -1,0 +1,6 @@
+<!-- PLACEHOLDER logo — replace with Tendem's official brand SVG before public launch. -->
+<svg width="560" height="160" viewBox="0 0 560 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="80" cy="80" r="34" stroke="#4F46E5" stroke-width="16"/>
+  <circle cx="134" cy="80" r="34" stroke="#4F46E5" stroke-width="16" stroke-opacity="0.55"/>
+  <text x="196" y="102" font-family="Inter, Helvetica, Arial, sans-serif" font-size="72" font-weight="700" fill="#111827">Tendem</text>
+</svg>

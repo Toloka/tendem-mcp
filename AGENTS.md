@@ -111,8 +111,8 @@ Key rules to internalize:
 
 - **Transmit the brief faithfully** — pass the user's own words into
   `create_task`; let Tendem drive scoping. Don't pre-interrogate the user.
-- **Never approve a spend silently** — surface price + scope and get an explicit
-  go-ahead before `approve_task`.
+- **Never approve a spend silently** — call `get_contract` for the full scope +
+  price, surface both, and get an explicit go-ahead before `approve_task`.
 - **Never busy-loop** — use `get_task(task_id, wait_for_change_seconds=30)`, poll
   silently, and hand off after a few unchanged rounds.
 - **Data scraping is refused** by policy.

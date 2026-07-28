@@ -124,11 +124,12 @@ that connects to the hosted URL and injects your `Authorization: ApiKey` header:
 ```
 
 Keep the token out of source control (inject it from an environment variable or
-secret store). Your custom agent loop drives the same nine tools the plugin
-uses — `create_task`, `get_task`, `get_task_result`, `list_tasks`,
-`approve_task`, `cancel_task`, `send_message`, `read_chat`, `get_account` — to
-implement the create → scope → approve → poll → fetch lifecycle yourself. The
-server ships a `tendem-quickstart` prompt with a full walkthrough.
+secret store). Your custom agent loop drives the same eleven tools the plugin
+uses — `create_task`, `get_task`, `get_contract`, `get_task_result`,
+`list_tasks`, `approve_task`, `cancel_task`, `send_message`, `read_chat`,
+`get_account`, `get_file_upload_url` — to implement the create → scope →
+approve → poll → fetch lifecycle yourself. The server ships a
+`tendem-quickstart` prompt with a full walkthrough.
 
 > **Spend safety:** `approve_task` is what triggers a charge. In an automated
 > pipeline, gate it behind your own approval logic and check `get_account`

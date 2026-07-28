@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*tendem",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/tendem-post.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
