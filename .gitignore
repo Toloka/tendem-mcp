@@ -17,5 +17,6 @@ node_modules/
 .env
 .env.local
 
-# Tendem task outputs saved by the plugin
-tendem/
+# Tendem task outputs saved by the plugin (anchored to repo root so it does
+# NOT match the nested plugins/tendem/ and codex/tendem/ distribution dirs)
+/tendem/

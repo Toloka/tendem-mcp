@@ -1,0 +1,6 @@
+interface:
+  display_name: "Tendem: check status"
+  short_description: "Check on a Tendem task and advance it"
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,19 @@
+{
+  "name": "tendem",
+  "displayName": "Tendem",
+  "version": "1.0.0",
+  "description": "Delegate work to vetted human experts without leaving your editor. Submit a task, get a transparent quote, approve, and receive verified results — files and reports — back in your project.",
+  "author": {
+    "name": "Tendem"
+  },
+  "homepage": "https://tendem.ai",
+  "repository": "https://github.com/Toloka/tendem-mcp",
+  "license": "Apache-2.0",
+  "category": "productivity",
+  "keywords": ["tendem", "mcp", "tasks", "human-in-the-loop", "experts", "delivery", "research", "productivity"],
+  "tags": ["tendem", "mcp", "human-in-the-loop", "experts", "research", "productivity"],
+  "logo": "assets/logo.svg",
+  "skills": "./skills/",
+  "rules": "./rules/",
+  "mcpServers": "./.mcp.json"
+}

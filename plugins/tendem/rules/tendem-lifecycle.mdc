@@ -1,0 +1,59 @@
+---
+description: Enforces the correct Tendem MCP task lifecycle — faithful briefs, clean polling, explicit spend approval, and safe file handling. Governs all interactions with the Tendem MCP server.
+alwaysApply: true
+---
+
+# Tendem MCP lifecycle
+
+This workspace uses [Tendem](https://tendem.ai) to delegate work to vetted
+human experts. You (the agent) submit a task on the user's behalf; Tendem
+scopes it in a chat, returns a price quote, and once the user approves, a human
+expert executes it and returns results as markdown plus downloadable files.
+
+The tools are named `mcp__tendem__*` (or `mcp__plugin_tendem_tendem__*` when
+plugin-bundled). If absent, the connector isn't connected — tell the user to
+connect the `tendem` MCP server in their client's MCP settings and complete the
+OAuth login. For the full walkthrough, the `tendem-tasks` skill and the
+server's `tendem-quickstart` prompt are the source of truth.
+
+## The path
+
+```
+create_task (+ uploads) → SCOPING LOOP → quote → user approves → approve_task
+                          poll ⇄ answer                              │
+                                                                     ▼
+                          EXECUTION LOOP → next_action=fetch_result → get_task_result
+```
+
+1. `create_task` — pass the user's own formulation faithfully; do **not** expand
+   it into a synthesized brief or pre-interrogate the user. Tendem drives
+   scoping.
+2. Scoping loop: `get_task(task_id, wait_for_change_seconds=30)`, answer Tendem's
+   questions from conversation context via `send_message`.
+3. Approval gate: when the quote is ready, call `get_contract(task_id)` for the
+   full scope + price (`get_task` omits these details), surface **price +
+   scope**, and get the user's explicit go-ahead before `approve_task`. This is
+   a spend.
+4. Execution loop: poll a few times, then hand off — nothing is lost between
+   sessions.
+5. `get_task_result` — present the markdown, save `files[]` under
+   `./tendem/<task_id>/`.
+
+## Rules of the road
+
+- **Offer, don't hijack.** If the skill surfaced only because a task *could* use
+  a human, offer Tendem as an option and create a task only after the user says
+  yes.
+- **Spend needs explicit approval.** Never call `approve_task` without showing
+  the price and scope and getting a clear yes.
+- **Never busy-loop.** Trust the envelope's `next_action` / `poll_after_seconds`
+  / `guidance`. Use `wait_for_change_seconds=30` long-polls, poll silently, and
+  hand off after a handful of unchanged rounds.
+- **A scope-change request voids the quote.** Never show a stale price; keep
+  polling until a fresh quote arrives.
+- **Insufficient balance is not a retry.** `approve_task` returns a task-bound
+  `topup_url` — give it to the user; never loop on `approve_task`.
+- **Data scraping is refused** by policy — automated data-extraction tasks won't
+  be accepted, and rephrasing doesn't change that. Don't submit them.
+- **One unit of work per task.** If the work pivots, create a new task (same
+  `conversation_id`).
