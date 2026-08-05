@@ -68,6 +68,12 @@ gemini extensions install https://github.com/Toloka/tendem-mcp
 
 After install, the user authenticates inside Gemini with `/mcp auth tendem`.
 
+> **Don't remove the `gemini-cli-extension` repo topic.** Gemini's Extensions
+> Gallery has no submission form — a crawler finds extensions daily by that
+> GitHub topic and reads [`gemini-extension.json`](./gemini-extension.json) from
+> the repo root. The topic is the entire listing mechanism, so deleting it
+> silently delists Tendem from the gallery.
+
 ### Kiro
 
 Point Kiro at the [`tendem-power/`](./tendem-power/) bundle and connect the
