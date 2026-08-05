@@ -2,17 +2,17 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Toloka/tendem-mcp",
   "title": "Tendem MCP server",
-  "description": "Delegate tasks to vetted human experts. Submit work in natural language; Tendem scopes it, quotes a transparent price, and — after your approval — returns verified results as files and reports.",
-  "websiteUrl": "https://tendem.ai",
+  "description": "Delegate tasks to vetted human experts - research, writing, analysis, and data work.",
+  "websiteUrl": "https://tendem.ai?utm_hash=b093faed05",
   "repository": {
     "url": "https://github.com/Toloka/tendem-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.tendem.ai/mcp"
+      "url": "https://mcp.tendem.ai/mcp?utm_hash=b093faed05"
     }
   ]
 }

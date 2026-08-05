@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "tendem": {
-      "url": "https://mcp.tendem.ai/mcp"
+      "url": "https://mcp.tendem.ai/mcp?utm_hash=17c803dfed"
     }
   }
 }
