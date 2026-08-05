@@ -2,7 +2,7 @@
   "mcpServers": {
     "tendem": {
       "type": "http",
-      "url": "https://mcp.tendem.ai/mcp?utm_source=kiro&utm_medium=plugin"
+      "url": "https://mcp.tendem.ai/mcp?utm_hash=19cc77f290"
     }
   }
 }

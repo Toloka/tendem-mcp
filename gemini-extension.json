@@ -4,7 +4,7 @@
   "description": "Delegate tasks to vetted human experts from Gemini CLI via the hosted Tendem MCP server. Submit work in plain English, get a transparent quote, approve, and receive verified results.",
   "mcpServers": {
     "tendem": {
-      "httpUrl": "https://mcp.tendem.ai/mcp?utm_source=gemini&utm_medium=plugin",
+      "httpUrl": "https://mcp.tendem.ai/mcp?utm_hash=1b7225e62e",
       "oauth": {
         "enabled": true
       }
