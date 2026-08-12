@@ -4,16 +4,24 @@
   "description": "Seamless access to the Tendem hybrid AI + human task service: bundles the MCP connector and teaches the agent the full task lifecycle (create, scope, approve, poll, fetch results and files).",
   "author": "Tendem",
   "homepage": "https://tendem.ai",
-  "keywords": ["tendem", "mcp", "tasks", "human-in-the-loop", "experts", "delivery"],
+  "keywords": [
+    "tendem",
+    "mcp",
+    "tasks",
+    "human-in-the-loop",
+    "experts",
+    "delivery"
+  ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Tendem",
     "shortDescription": "Delegate work to vetted human experts without leaving your agent.",
-    "longDescription": "Tendem is a hybrid AI + human task service. The agent submits your ask in your own words, answers most of the scoping chat itself, shows you the price — and only after your explicit approval does a vetted human expert start. Results come back as markdown plus files, saved into your project.",
+    "longDescription": "Tendem is a hybrid AI + human task service. The agent submits your ask in your own words, answers most of the scoping chat itself, shows you the price \u2014 and only after your explicit approval does a vetted human expert start. Results come back as markdown plus files, saved into your project.",
     "developerName": "Tendem",
     "category": "Productivity",
     "websiteURL": "https://tendem.ai"
-  }
+  },
+  "license": "MIT"
 }
