@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "langchain-tendem"
+version = "0.1.0"
+description = "LangChain integration for Tendem — delegate tasks to vetted human experts with guarded spend approval."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Toloka AI BV", email = "support@tendem.ai" }]
+keywords = [
+  "langchain",
+  "langgraph",
+  "mcp",
+  "model-context-protocol",
+  "tendem",
+  "human-in-the-loop",
+  "agents",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+dependencies = [
+  "langchain-core>=1.0,<2.0",
+  "langchain-mcp-adapters>=0.3.2,<0.4",
+  "mcp>=1.24,<2.0",
+  "typing-extensions>=4.14",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "pytest-asyncio>=1.0"]
+
+[project.urls]
+Homepage = "https://tendem.ai"
+Documentation = "https://github.com/Toloka/tendem-mcp/tree/main/integrations/langchain-tendem#readme"
+Repository = "https://github.com/Toloka/tendem-mcp"
+Issues = "https://github.com/Toloka/tendem-mcp/issues"
+Changelog = "https://github.com/Toloka/tendem-mcp/releases"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/langchain_tendem"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/langchain_tendem", "tests", "README.md", "LICENSE", "PUBLISHING.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "D"]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
