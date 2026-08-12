@@ -73,7 +73,7 @@ For the tool surface exposed by the server, see the
 ## License and support
 
 This Power integrates with the hosted [Tendem MCP server](https://tendem.ai).
-The plugin distribution is Apache-2.0 licensed.
+The plugin distribution is MIT licensed.
 
 - [Privacy Policy](https://tendem.ai/legal/privacy)
 - [Terms of Use](https://tendem.ai/legal/terms)
