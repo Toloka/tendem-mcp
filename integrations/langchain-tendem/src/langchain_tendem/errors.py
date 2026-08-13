@@ -1,8 +1,13 @@
-"""Exceptions raised by ``langchain-tendem``."""
+"""Exceptions raised by ``langchain-tendem``. None of the spend-related ones
+fire after money has moved: refusal always happens before the charge.
+"""
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any
+
+from langchain_tendem.constants import TRANSIENT_ERROR_CODE
 
 if TYPE_CHECKING:  # pragma: no cover
     from langchain_tendem.models import TaskSnapshot
@@ -12,27 +17,41 @@ class TendemError(Exception):
     """Base class for every error this package raises."""
 
 
-class TendemToolError(TendemError):
-    """The MCP server reported a tool execution error (``isError=true``)."""
+_TOOL_FAILURE_CODE = re.compile(r"Tool failed \((?P<code>[A-Z_]+)\)")
 
-    def __init__(self, tool_name: str, message: str) -> None:
+
+class TendemToolError(TendemError):
+    """The MCP server reported a tool execution error.
+
+    The server prefixes failures with ``Tool failed (<CODE>):``; the parsed
+    code is on ``code``, and ``TEMPORARILY_UNAVAILABLE`` marks it
+    ``transient`` (the long-wait paths retry those).
+    """
+
+    def __init__(
+        self, tool_name: str, message: str, *, code: str | None = None
+    ) -> None:
         self.tool_name = tool_name
         self.message = message
+        if code is None:
+            match = _TOOL_FAILURE_CODE.search(message or "")
+            code = match.group("code") if match else None
+        self.code = code
         super().__init__(f"Tendem tool {tool_name!r} failed: {message}")
+
+    @property
+    def transient(self) -> bool:
+        """``True`` when the server itself says retrying is the right move."""
+        return self.code == TRANSIENT_ERROR_CODE
 
 
 class TendemProtocolError(TendemError):
     """A tool returned a payload this client cannot make sense of."""
 
 
-class ApprovalNotConfirmedError(TendemError):
-    """Something tried to approve a spend without an explicit human decision.
-
-    This is the package's central guardrail. Approving a Tendem task charges the
-    user's balance, so neither a model nor a convenience default may do it
-    implicitly: calling code must pass ``confirmed=True`` (or record a grant on
-    the :class:`~langchain_tendem.approval.HumanApprovalGate`) for the specific
-    ``task_id``.
+class ApprovalBlockedError(TendemError):
+    """``approve_task`` was blocked before any charge: no spend cap recorded
+    for this task, the contract has no quote yet, or the call was malformed.
     """
 
     def __init__(self, task_id: str | None, detail: str) -> None:
@@ -42,51 +61,83 @@ class ApprovalNotConfirmedError(TendemError):
         super().__init__(f"Spend approval blocked{where}: {detail}")
 
 
-class QuoteChangedError(TendemError):
-    """The price on the server differs from the price a human was shown.
+class PriceCeilingExceededError(TendemError):
+    """The quote landed above the pre-authorised ceiling. Nothing was charged."""
 
-    Asking Tendem to change scope voids the previous quote, so a stale price is
-    a real hazard: the human approved one number and the server would charge
-    another. Re-read the contract, show the new price, get a fresh decision.
-    """
-
-    def __init__(
-        self, task_id: str | None, approved_price: Any, current_price: Any
-    ) -> None:
+    def __init__(self, task_id: str | None, max_price: Any, current_price: Any) -> None:
         self.task_id = task_id
-        self.approved_price = approved_price
+        self.max_price = max_price
         self.current_price = current_price
         super().__init__(
-            f"Quote for task {task_id} changed: a human approved "
-            f"{approved_price!r} but the current price is {current_price!r}. "
-            "Show the new scope and price and get a fresh decision."
+            f"Quote for task {task_id} is {current_price!r}, above the "
+            f"pre-authorised ceiling of {max_price!r}. Nothing was charged. "
+            "Raise the ceiling, or show the human the real price and approve "
+            "it explicitly."
         )
 
 
-class PollTimeoutError(TendemError):
-    """A bounded poll loop ran out of rounds without the task needing us.
-
-    Not a failure of the task — Tendem work can take hours. It is the signal to
-    stop holding the turn open and hand off (background watcher, or tell the
-    human they can check back later). ``snapshot`` carries the last state seen.
+class TopUpRequiredError(TendemError):
+    """The balance cannot cover an approved quote. Not retryable headlessly:
+    ``topup_url`` is task-bound — a human paying it auto-approves the task.
     """
 
-    def __init__(self, task_id: str, rounds: int, snapshot: TaskSnapshot | None) -> None:
+    def __init__(
+        self, task_id: str | None, topup_url: str | None, price: Any = None
+    ) -> None:
+        self.task_id = task_id
+        self.topup_url = topup_url
+        self.price = price
+        at = f" at {price!r}" if price is not None else ""
+        url = (
+            f" Top-up URL (paying it auto-approves this task): {topup_url}"
+            if topup_url
+            else ""
+        )
+        super().__init__(
+            f"Insufficient Tendem balance to approve task {task_id}{at}.{url}"
+        )
+
+
+class TaskFailedError(TendemError):
+    """The task ended (or stalled) without a deliverable. ``snapshot`` carries
+    the last state; its ``guidance`` usually explains what went wrong.
+    """
+
+    def __init__(
+        self, task_id: str, detail: str, snapshot: TaskSnapshot | None = None
+    ) -> None:
+        self.task_id = task_id
+        self.detail = detail
+        self.snapshot = snapshot
+        super().__init__(f"Tendem task {task_id} failed: {detail}")
+
+
+class PollTimeoutError(TendemError):
+    """A bounded wait ran out of budget. Not a task failure — nothing is lost
+    server-side; resume with the same ``task_id``. ``snapshot`` = last state.
+    """
+
+    def __init__(
+        self, task_id: str, rounds: int, snapshot: TaskSnapshot | None
+    ) -> None:
         self.task_id = task_id
         self.rounds = rounds
         self.snapshot = snapshot
         action = snapshot.next_action if snapshot else "unknown"
         super().__init__(
             f"Task {task_id} still at next_action={action!r} after {rounds} "
-            "poll round(s). Hand off rather than continuing to poll."
+            "poll round(s). The task keeps running server-side; resume waiting "
+            "with the same task_id."
         )
 
 
 __all__ = [
-    "ApprovalNotConfirmedError",
+    "ApprovalBlockedError",
     "PollTimeoutError",
-    "QuoteChangedError",
+    "PriceCeilingExceededError",
+    "TaskFailedError",
     "TendemError",
     "TendemProtocolError",
     "TendemToolError",
+    "TopUpRequiredError",
 ]

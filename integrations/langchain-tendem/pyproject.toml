@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "langchain-tendem"
-version = "0.1.0"
-description = "LangChain integration for Tendem — delegate tasks to vetted human experts with guarded spend approval."
+version = "0.2.0"
+description = "Human-in-the-loop for LangChain agents — price-capped tools that delegate work to vetted human experts via Tendem, polling in plain Python (no LLM, no tokens) until the verified result returns."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -36,9 +36,11 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "httpx>=0.27,<1.0",
   "langchain-core>=1.0,<2.0",
   "langchain-mcp-adapters>=0.3.2,<0.4",
   "mcp>=1.24,<2.0",
+  "pydantic>=2.7,<3.0",
   "typing-extensions>=4.14",
 ]
 
@@ -56,7 +58,7 @@ Changelog = "https://github.com/Toloka/tendem-mcp/releases"
 packages = ["src/langchain_tendem"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/langchain_tendem", "tests", "README.md", "LICENSE", "PUBLISHING.md"]
+include = ["src/langchain_tendem", "tests", "README.md", "LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,7 +71,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "D"]
-ignore = ["D203", "D213"]
+ignore = ["D107", "D203", "D205", "D213", "D400", "D401", "D415"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]

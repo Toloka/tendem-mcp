@@ -19,9 +19,24 @@ from mcp.types import CallToolResult, ListToolsResult, TextContent
 from mcp.types import Tool as MCPTool
 
 from langchain_tendem.client import Tendem
-from langchain_tendem.constants import TOOL_NAMES
 
 ToolResponder = Callable[[dict[str, Any], int], Any]
+
+#: The 11 tools the hosted server exposes (discovered via list_tools at
+#: runtime; pinned here only so the fake transport can advertise them).
+TOOL_NAMES = (
+    "create_task",
+    "get_task",
+    "get_contract",
+    "approve_task",
+    "cancel_task",
+    "get_task_result",
+    "list_tasks",
+    "read_chat",
+    "send_message",
+    "get_account",
+    "get_file_upload_url",
+)
 
 
 def make_tool(name: str) -> MCPTool:

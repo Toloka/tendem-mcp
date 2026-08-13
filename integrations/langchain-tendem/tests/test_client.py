@@ -3,35 +3,36 @@
 from __future__ import annotations
 
 import pytest
-from conftest import FakeSession, error_result, make_tendem
+from conftest import TOOL_NAMES, FakeSession, error_result, make_tendem
 
 from langchain_tendem import (
     LANGCHAIN_UTM_HASH,
     TENDEM_MCP_URL,
-    TOOL_NAMES,
     Contract,
-    NextAction,
     Tendem,
     TendemToolError,
 )
-from langchain_tendem.constants import API_KEY_ENV_VAR
+from langchain_tendem.constants import API_KEY_ENV_VAR, PACKAGE_VERSION
 
 # ------------------------------------------------------------ attribution
 
 
-def test_default_endpoint_carries_the_langchain_utm_hash() -> None:
-    assert TENDEM_MCP_URL == f"https://mcp.tendem.ai/mcp?utm_hash={LANGCHAIN_UTM_HASH}"
+def test_default_endpoint_carries_attribution_and_version() -> None:
+    assert (
+        "https://mcp.tendem.ai/mcp"
+        f"?utm_hash={LANGCHAIN_UTM_HASH}&client_version={PACKAGE_VERSION}"
+    ) == TENDEM_MCP_URL
     assert LANGCHAIN_UTM_HASH == "9cfb868c94"
-    assert Tendem().connection["url"] == TENDEM_MCP_URL
+    assert Tendem(api_key="k").connection["url"] == TENDEM_MCP_URL
 
 
 def test_endpoint_is_overridable() -> None:
-    client = Tendem(url="http://localhost:8931/mcp")
+    client = Tendem(api_key="k", url="http://localhost:8931/mcp")
     assert client.connection["url"] == "http://localhost:8931/mcp"
 
 
 def test_connection_is_streamable_http() -> None:
-    assert Tendem().connection["transport"] == "streamable_http"
+    assert Tendem(api_key="k").connection["transport"] == "streamable_http"
 
 
 # -------------------------------------------------------------------- auth
@@ -40,7 +41,6 @@ def test_connection_is_streamable_http() -> None:
 def test_api_key_becomes_an_apikey_authorization_header() -> None:
     client = Tendem(api_key="tk_live_123")
 
-    assert client.uses_api_key is True
     assert client.connection["headers"]["Authorization"] == "ApiKey tk_live_123"
 
 
@@ -52,26 +52,28 @@ def test_api_key_is_read_from_the_environment(
     assert Tendem().connection["headers"]["Authorization"] == "ApiKey tk_env_456"
 
 
-def test_no_api_key_means_no_auth_header_so_oauth_can_run(
+def test_a_missing_api_key_fails_at_construction(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """The server rejects unauthenticated calls, so fail fast and clearly."""
     monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
-    client = Tendem()
 
-    assert client.uses_api_key is False
-    assert "headers" not in client.connection
+    with pytest.raises(ValueError, match=API_KEY_ENV_VAR):
+        Tendem()
 
 
-def test_extra_headers_are_merged(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
-    client = Tendem(headers={"X-Trace": "abc"})
+def test_extra_headers_are_merged() -> None:
+    client = Tendem(api_key="k", headers={"X-Trace": "abc"})
 
-    assert client.connection["headers"] == {"X-Trace": "abc"}
+    assert client.connection["headers"] == {
+        "Authorization": "ApiKey k",
+        "X-Trace": "abc",
+    }
 
 
 def test_read_timeout_outlives_the_long_poll_window() -> None:
     """A 30s server-side block needs a read timeout well above 30s."""
-    client = Tendem(wait_for_change_seconds=30)
+    client = Tendem(api_key="k", wait_for_change_seconds=30)
 
     assert client.connection["sse_read_timeout"] > 30
 
@@ -79,8 +81,8 @@ def test_read_timeout_outlives_the_long_poll_window() -> None:
 # ------------------------------------------------------------------- tools
 
 
-async def test_get_tools_exposes_all_eleven_tools(session: FakeSession) -> None:
-    client, _ = make_tendem(session)
+async def test_get_tools_exposes_the_servers_tools(session: FakeSession) -> None:
+    client, _ = make_tendem(session, max_price=25.0)
 
     tools = await client.get_tools()
 
@@ -89,22 +91,19 @@ async def test_get_tools_exposes_all_eleven_tools(session: FakeSession) -> None:
 
 
 async def test_tool_names_can_be_prefixed(session: FakeSession) -> None:
-    client, _ = make_tendem(session)
+    client, _ = make_tendem(session, max_price=25.0)
 
     tools = await client.get_tools(tool_name_prefix=True)
 
     assert tools[0].name == "tendem_create_task"
 
 
-async def test_guard_can_be_disabled_explicitly() -> None:
-    """Opting out is possible but must be a deliberate keyword, never a default."""
-    session = FakeSession(responses={"approve_task": {"approved": True}})
+async def test_get_tools_requires_a_spend_cap(session: FakeSession) -> None:
+    """The guard is always on, so exposing approve_task needs the cap."""
     client, _ = make_tendem(session)
-    tools = {t.name: t for t in await client.get_tools(guard_spend=False)}
 
-    await tools["approve_task"].ainvoke({"task_id": "task-1", "price": 1.0})
-
-    assert session.names() == ["approve_task"]
+    with pytest.raises(ValueError, match="spend cap"):
+        await client.get_tools()
 
 
 # -------------------------------------------------------------- lifecycle
@@ -130,7 +129,7 @@ async def test_create_task_passes_the_brief_through() -> None:
     )
 
     assert snapshot.task_id == "task-9"
-    assert snapshot.action is NextAction.AWAITING_TENDEM_WORK
+    assert snapshot.action == "awaiting_tendem_work"
     assert snapshot.guidance is not None
     assert session.args_for("create_task") == [
         {
@@ -146,8 +145,9 @@ async def test_get_contract_summary_flags_an_unquoted_scope() -> None:
         responses={
             "get_contract": {
                 "task_id": "task-1",
-                "title": "Teardown",
-                "task_description": "Scope text",
+                "state": "estimating",
+                "contract": {"title": "Teardown", "input_prompt": "Scope text"},
+                "price": None,
             }
         }
     )
@@ -169,8 +169,8 @@ async def test_get_task_result_parses_content_and_files() -> None:
                 "files": [
                     {
                         "name": "teardown.pdf",
-                        "url": "https://files.example/teardown.pdf",
-                        "mime_type": "application/pdf",
+                        "download_url": "https://files.example/teardown.pdf",
+                        "content_type": "application/pdf",
                         "size_bytes": "2048",
                     }
                 ],
@@ -219,12 +219,14 @@ async def test_payload_falls_back_to_json_in_text_content() -> None:
 
 
 async def test_shared_session_is_reused_inside_a_context_block() -> None:
-    session = FakeSession(responses={"get_account": {"balance": 42}})
+    session = FakeSession(
+        responses={"get_task": {"task_id": "t1", "status": "ACTING"}}
+    )
 
     client, _ = make_tendem(session)
     async with client as tendem:
-        await tendem.get_account()
-        await tendem.get_account()
+        await tendem.get_task("t1")
+        await tendem.get_task("t1")
 
     assert session.initialized == 1
-    assert session.names() == ["get_account", "get_account"]
+    assert session.names() == ["get_task", "get_task"]

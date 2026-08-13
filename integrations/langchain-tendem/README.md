@@ -1,235 +1,93 @@
 # langchain-tendem
 
-LangChain integration for [Tendem](https://tendem.ai) — a hybrid AI + human task
-service. You submit a task in plain English, Tendem's orchestrator scopes it in a
-chat, quotes a transparent price, and once a **human** approves the spend, a
-vetted expert executes it and returns verified results as markdown plus files.
+Human-in-the-loop for agentic pipelines. [Tendem](https://tendem.ai) is a
+hybrid AI + human task service; this package wraps it into **four LangChain
+tools** your agent drives — delegation to a real human expert with no
+interruptions and no paywalls, capped by a budget you set in advance.
+
+## Quickstart
 
 ```bash
 pip install langchain-tendem
+# key: agent.tendem.ai/mcp → "Agent builders" tab
+export TENDEM_API_KEY=...
 ```
 
 ```python
-from langchain_tendem import Tendem
+from langchain.agents import create_agent
+from langchain_tendem import tendem_tools
 
-tendem = Tendem()                 # OAuth on first use
-tools = await tendem.get_tools()  # LangChain tools; approve_task is gated
+agent = create_agent(
+    "anthropic:claude-sonnet-4-5",
+    tools=tendem_tools(max_price=25.0),
+)
 ```
 
-Drop `tools` into any LangChain or LangGraph agent — they are plain
-`StructuredTool`s.
+That's the whole configuration: an API key and a spend cap.
 
-## Why not just use `langchain-mcp-adapters`?
+## The four tools
 
-You can: Tendem is a standard streamable-HTTP MCP server, and the generic adapter
-will happily hand your model all 11 tools. This package exists because raw access
-is the easy part.
+- **`create_human_task(request, file_paths)`** — the only non-idempotent
+  call, so it is thin and deterministic: create + upload files + announce
+  them, **no polling**, done in seconds. Returns the `task_id`, which lands
+  in the (checkpointed) conversation — a retried agent never duplicates a
+  task it knows about.
+- **`check_human_task(task_id)`** — polls in plain Python (no LLM, no
+  tokens) and forwards only what needs the agent: a MESSAGE from the service
+  (your agent answers from its own context — the agent-to-agent conversation
+  the MCP is designed around), a `QUOTE EXCEEDS CAP` report carrying the
+  full contract scope (the agent narrows the scope or walks away, nothing
+  charged), or `STARTED` after **auto-approving** a quote within the cap.
+  The flow never stops for a payment decision — the cap is the consent.
+- **`reply_to_human_task(task_id, reply)`** — send the answer or the scope
+  reduction, then keep polling like `check_human_task`.
+- **`wait_for_human_result(task_id)`** — blocks until the verified result
+  (markdown + pre-signed file URLs). Idempotent: interrupted or
+  `IN PROGRESS`, just call it again.
 
-| | generic adapter | `langchain-tendem` |
-|---|---|---|
-| Lifecycle | 11 tools, no ordering, no typing | typed helpers for create → scope → approve → execute → fetch |
-| Spend approval | model can call `approve_task` freely | structurally gated on an explicit human decision |
-| Stale quotes | a voided quote can still be charged | price-bound grants refuse the mismatch |
-| Polling | whatever the model improvises | server-side long-poll, bounded rounds, paced floor |
-| Attribution | no channel hash | `?utm_hash=9cfb868c94` by default |
+Everything except `create_human_task` is stateless against the `task_id` and
+survives crashes and checkpoint replays.
 
-## Authentication
+## How it behaves
 
-**OAuth 2.0 (interactive, default).** Construct `Tendem()` with no key. The MCP
-transport runs the OAuth flow on first use; the user signs in at
-[agent.tendem.ai](https://agent.tendem.ai).
+- **The cap is the safety model.** Quotes ≤ `max_price` are approved
+  automatically; quotes above it are surfaced with the scope for the agent
+  to renegotiate — **nothing is ever charged** on any refusal path. An empty
+  balance returns a task-bound top-up URL (paying it auto-approves the task).
+- **Waiting is free.** Human work takes minutes to hours; all waiting is
+  server-side long-polling in Python. Transient network errors and the
+  server's `TEMPORARILY_UNAVAILABLE` are retried with backoff.
+- **Trivial briefs are answered free** by Tendem's orchestrator in the
+  scoping chat; the tools return those answers directly, marked uncharged.
+- **Input files ride along**: `file_paths` on create (paths, uploaded under
+  basenames), announced to the service as the protocol requires; results
+  come back as pre-signed download URLs.
+- **Business outcomes are strings, not exceptions** (`QUOTE EXCEEDS CAP`,
+  `NOT EXECUTED`, `IN PROGRESS`), so any agent loop can read and recover.
+- **Limits:** briefs must be self-contained (the expert sees only the task
+  text and files); data scraping is refused by Tendem policy; one unit of
+  work per task.
 
-**API key (headless).** For pipelines with no browser, mint a token at
-[agent.tendem.ai/tokens](https://agent.tendem.ai/tokens). It is sent as
-`Authorization: ApiKey <token>`.
+## Programmatic use
 
-```python
-tendem = Tendem(api_key="tk_live_...")     # explicit
-tendem = Tendem()                          # or set TENDEM_API_KEY in the env
-```
+The same engine is importable for non-agent code: `prepare_task(client,
+description, files=...)` creates a task, and `advance_task(client, task_id,
+max_price=..., timeout=..., reply=...)` drives it, returning typed
+`TaskEvent`s (`result` / `question` / `approved` / `over_budget` /
+`pending`). Underneath sits the typed `Tendem` client — `create_task`,
+`poll`, `get_contract`, cap-gated `approve_task`, `get_task_result`,
+`upload_files`, `read_chat`, `send_message`, and raw `call` — plus
+`tendem.get_tools()`, which loads the 11 raw MCP tools with model-issued
+`approve_task` calls capped by the same `max_price`.
 
-## Approval is a human decision — and the code enforces it
-
-Approving a Tendem task **charges the user's account**. This package therefore
-makes `approve_task` unreachable without an explicit, unambiguous opt-in. Not a
-convention in the docs — a gate in the call path.
-
-**Programmatic path.** `confirmed` must be exactly `True`. `"yes"`, `1`, and any
-other truthy value are rejected, so a stringly-typed model argument cannot pass
-as consent:
-
-```python
-await tendem.approve_task(task_id)                     # ApprovalNotConfirmedError
-await tendem.approve_task(task_id, confirmed="yes")    # ApprovalNotConfirmedError
-await tendem.approve_task(task_id, confirmed=True, price=120.0)   # charges
-```
-
-A price must also be *known*. Scope is available before the quote is, so
-`approve_task` on a contract with no price yet is refused too — an approval
-nobody could have seen a number for is not an informed one. Omitting `price`
-is fine once the contract carries one; it is then read from the contract.
-
-**Model-driven path.** The `approve_task` tool returned by `get_tools()` is
-wrapped by `SpendGuardInterceptor`. Unless your application recorded a human's
-decision on the gate for that exact `task_id`, the call is short-circuited before
-it reaches the network and the model gets an error `ToolMessage` telling it to ask
-a human:
-
-```python
-# ... your UI showed the contract and the person clicked Approve:
-tendem.approval_gate.grant(task_id, confirmed=True, price=120.0,
-                           granted_by="alex@example.com")
-```
-
-Grants are **single-use** and **price-bound** by default — `price` is required,
-because a grant without one would authorise any amount. Price binding closes the
-stale-quote hole: asking Tendem to cut scope voids the old quote, so a grant
-recorded at $90 will not authorise a charge at $120 — you get `QuoteChangedError`
-and have to show the new number. `HumanApprovalGate(require_price_match=False)`
-opts out, deliberately.
-
-`tendem.approval_gate.history` is an audit trail of every grant and its use.
-
-## Polling never busy-loops
-
-`get_task` supports a server-side blocking window: the server holds the request
-open until the task changes or the window elapses. `Tendem.poll` uses it, and adds
-two independent bounds:
-
-1. at most `max_rounds` rounds (default 6), then `PollTimeoutError`;
-2. a minimum wall-clock duration per round, so even a server that answers
-   instantly cannot produce a tight loop.
-
-`PollTimeoutError` is not a failure. Tendem execution takes hours; the exception
-is the cue to **hand off** — attach a background watcher, or tell the user they
-can check back — not to raise the budget.
-
-```python
-from langchain_tendem import PollTimeoutError
-
-try:
-    snapshot = await tendem.poll(task_id)
-except PollTimeoutError as exc:
-    print("still working:", exc.snapshot.guidance)  # hand off here
-```
-
-## Worked example: a task end to end
-
-```python
-import asyncio
-from langchain_tendem import NextAction, PollTimeoutError, Tendem
-
-
-async def main() -> None:
-    async with Tendem() as tendem:  # one MCP session for the whole flow
-        # 1. Submit the user's own words. Don't pre-interrogate them and don't
-        #    synthesise a "complete" brief — Tendem asks better questions.
-        task = await tendem.create_task(
-            "Pricing page teardown",
-            "Write a competitive teardown of Acme's pricing page.",
-            conversation_id="conv-42",
-        )
-
-        # 2. Scoping loop. Answer from context; return None to escalate.
-        async def answer(chat, snapshot):
-            messages = chat.get("messages") or []
-            question = messages[-1].get("text", "") if messages else ""
-            if "competitor" in question.lower():
-                return "Compare against Beta and Gamma."
-            return None  # not in context — a human must reply
-
-        try:
-            snapshot = await tendem.drive_scoping(task.task_id, answer=answer)
-        except PollTimeoutError as exc:
-            print("still scoping. Check back later:", exc.snapshot.guidance)
-            return
-
-        if snapshot.action is not NextAction.AWAIT_USER_APPROVAL:
-            print("needs a human:", snapshot.guidance)
-            return
-
-        # 3. Approval gate. Show scope AND price, then get a real decision.
-        contract = await tendem.get_contract(task.task_id)
-        print(contract.summary())
-        if input("Approve this spend? [y/N] ").strip().lower() != "y":
-            return  # or send_message() proposing a concrete scope cut
-
-        outcome = await tendem.approve_task(
-            task.task_id, confirmed=True, price=contract.price
-        )
-        if not outcome.approved:
-            if outcome.needs_topup:
-                print("Top up to auto-approve:", outcome.topup_url)
-            return
-
-        # 4. Execution takes hours. Poll a few rounds, then hand off.
-        try:
-            snapshot = await tendem.poll(task.task_id, max_rounds=4)
-        except PollTimeoutError as exc:
-            print("In progress. Check back later:", exc.snapshot.guidance)
-            return
-
-        # 5. Fetch the deliverable.
-        if snapshot.result_ready:
-            result = await tendem.get_task_result(task.task_id)
-            print(result.content)
-            for f in result.files:
-                print(f.name, f.url)  # pre-signed, short-lived
-
-
-asyncio.run(main())
-```
-
-## Public API
-
-| Object | Purpose |
-|---|---|
-| `Tendem` | client: `get_tools`, `create_task`, `get_task`, `poll`, `drive_scoping`, `get_contract`, `approve_task`, `get_task_result`, `read_chat`, `send_message`, `list_tasks`, `cancel_task`, `get_account`, `get_file_upload_url`, `call` |
-| `HumanApprovalGate` | ledger of human spend approvals (`grant`, `check`, `consume`, `revoke`, `history`) |
-| `SpendGuardInterceptor` | MCP interceptor enforcing the gate on `approve_task` |
-| `TaskSnapshot` | status + `next_action` envelope, with `needs_caller` / `needs_human` / `result_ready` / `is_terminal` |
-| `Contract` | scope + price, with `is_quoted` and `summary()` |
-| `ApprovalOutcome` | `approved`, `reason`, `topup_url`, `needs_topup` |
-| `TaskResult`, `TendemFile` | delivered markdown and files |
-| `NextAction`, `TaskStatus` | server vocabulary as enums, tolerant of unknown values |
-| errors | `TendemError`, `ApprovalNotConfirmedError`, `QuoteChangedError`, `PollTimeoutError`, `TendemToolError`, `TendemProtocolError` |
-
-Read `next_action` (via `TaskSnapshot.action`) rather than `status`:
-
-| `next_action` | What to do |
-|---|---|
-| `awaiting_tendem_work` | a few long-polls, then hand off |
-| `await_input` | `read_chat`, answer with `send_message` |
-| `await_user_approval` | `get_contract`, show a human, then decide |
-| `await_user_topup` | give the human `topup_url` |
-| `resolve_race` | re-read the chat, re-send with the new offset |
-| `fetch_result` | `get_task_result` |
-| `done` | stop |
-
-## Notes and limits
-
-- **Data scraping is refused** by Tendem policy. Rephrasing does not help.
-- **One unit of work per task.** After approval a task is locked to the agreed
-  job; a pivot means a new task (same `conversation_id`).
-- **Uploads are not auto-detected.** After `get_file_upload_url` and the upload,
-  name each file in a `send_message`.
-- **`cancel_task` does not cancel** server-side; it mints a Tendem-UI URL for the
-  user.
-- **Insufficient balance is not retryable.** `topup_url` is bound to the task and
-  paying it auto-approves that task.
-- `Tendem.get_tools()` is async, so this package does not subclass LangChain's
-  `BaseToolkit` (whose `get_tools` is synchronous). Use `Tendem` directly.
+Logging goes to the `langchain_tendem` logger (created, approved, uploaded,
+result) — enable INFO to watch a pipeline run.
 
 ## Development
 
 ```bash
-python -m venv .venv && . .venv/bin/activate
-pip install -e '.[test]'
-pytest
+uv venv && uv pip install -e '.[test]'
+uv run pytest   # network-free; fixtures mirror live server payloads
 ```
-
-Tests mock the MCP transport end to end and never touch the network.
-
-## License
 
 MIT. Part of [Toloka/tendem-mcp](https://github.com/Toloka/tendem-mcp).
