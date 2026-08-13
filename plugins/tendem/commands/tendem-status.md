@@ -1,4 +1,5 @@
 ---
+name: tendem-status
 description: Check on a Tendem task and advance it (poll cleanly, don't busy-loop)
 argument-hint: [task_id — optional; omit to pick from your recent tasks]
 ---

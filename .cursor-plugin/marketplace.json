@@ -1,0 +1,18 @@
+{
+  "name": "tendem",
+  "owner": {
+    "name": "Tendem (Toloka AI BV)",
+    "email": "svc.tendem-mcp-github-account@tendem.ai"
+  },
+  "metadata": {
+    "description": "Tendem — delegate work to vetted human experts from inside Cursor: submit a task, get a transparent quote, approve the spend, receive verified results.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "tendem",
+      "source": "./plugins/tendem",
+      "description": "Delegate work to vetted human experts without leaving your editor. Submit a task, get a transparent quote, approve, and receive verified results — files and reports — back in your project."
+    }
+  ]
+}
