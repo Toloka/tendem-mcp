@@ -31,5 +31,10 @@
   "logo": "assets/logo.svg",
   "skills": "./skills/",
   "rules": "./rules/",
+  "commands": "./commands/",
+  "agents": [
+    "./agents/tendem-watcher.md"
+  ],
+  "hooks": "./hooks/hooks.json",
   "mcpServers": "./mcp.json"
 }
