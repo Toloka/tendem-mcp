@@ -10,10 +10,26 @@
   "repository": "https://github.com/Toloka/tendem-mcp",
   "license": "MIT",
   "category": "productivity",
-  "keywords": ["tendem", "mcp", "tasks", "human-in-the-loop", "experts", "delivery", "research", "productivity"],
-  "tags": ["tendem", "mcp", "human-in-the-loop", "experts", "research", "productivity"],
+  "keywords": [
+    "tendem",
+    "mcp",
+    "tasks",
+    "human-in-the-loop",
+    "experts",
+    "delivery",
+    "research",
+    "productivity"
+  ],
+  "tags": [
+    "tendem",
+    "mcp",
+    "human-in-the-loop",
+    "experts",
+    "research",
+    "productivity"
+  ],
   "logo": "assets/logo.svg",
   "skills": "./skills/",
   "rules": "./rules/",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./mcp.json"
 }

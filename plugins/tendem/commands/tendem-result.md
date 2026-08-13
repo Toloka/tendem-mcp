@@ -1,4 +1,5 @@
 ---
+name: tendem-result
 description: Fetch and present a completed Tendem task's result (markdown + files)
 argument-hint: [task_id — optional; omit to pick from your recent tasks]
 ---

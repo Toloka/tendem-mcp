@@ -1,4 +1,5 @@
 ---
+name: tendem-task
 description: Submit a new task to Tendem (hybrid AI + human experts) and drive it through scoping
 argument-hint: <what you want a human expert to do>
 ---
