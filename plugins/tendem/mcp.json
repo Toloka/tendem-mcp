@@ -2,7 +2,10 @@
   "mcpServers": {
     "tendem": {
       "type": "http",
-      "url": "https://mcp.tendem.ai/mcp?utm_hash=de7492a8c8"
+      "url": "https://mcp.tendem.ai/mcp?utm_hash=de7492a8c8",
+      "auth": {
+        "CLIENT_ID": "mcp-tendem-production"
+      }
     }
   }
 }
