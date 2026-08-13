@@ -11,6 +11,7 @@ interruptions and no paywalls, capped by a budget you set in advance.
 pip install langchain-tendem
 # key: agent.tendem.ai/mcp → "Agent builders" tab
 export TENDEM_API_KEY=...
+# optional: TENDEM_MCP_URL overrides the endpoint (staging, local proxy)
 ```
 
 ```python

@@ -22,6 +22,9 @@ TENDEM_MCP_URL: Final[str] = (
 
 API_KEY_ENV_VAR: Final[str] = "TENDEM_API_KEY"
 
+URL_ENV_VAR: Final[str] = "TENDEM_MCP_URL"
+"""Environment variable overriding the endpoint (staging, local proxies)."""
+
 SERVER_NAME: Final[str] = "tendem"
 
 APPROVAL_TOOL_NAME: Final[str] = "approve_task"
@@ -73,6 +76,7 @@ __all__ = [
     "SERVER_NAME",
     "TENDEM_MCP_URL",
     "TRANSIENT_BACKOFF_BASE_SECONDS",
+    "URL_ENV_VAR",
     "TRANSIENT_BACKOFF_MAX_SECONDS",
     "TRANSIENT_ERROR_CODE",
 ]

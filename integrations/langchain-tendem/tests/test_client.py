@@ -12,12 +12,15 @@ from langchain_tendem import (
     Tendem,
     TendemToolError,
 )
-from langchain_tendem.constants import API_KEY_ENV_VAR, PACKAGE_VERSION
+from langchain_tendem.constants import API_KEY_ENV_VAR, PACKAGE_VERSION, URL_ENV_VAR
 
 # ------------------------------------------------------------ attribution
 
 
-def test_default_endpoint_carries_attribution_and_version() -> None:
+def test_default_endpoint_carries_attribution_and_version(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(URL_ENV_VAR, raising=False)
     assert (
         "https://mcp.tendem.ai/mcp"
         f"?utm_hash={LANGCHAIN_UTM_HASH}&client_version={PACKAGE_VERSION}"
@@ -28,6 +31,24 @@ def test_default_endpoint_carries_attribution_and_version() -> None:
 
 def test_endpoint_is_overridable() -> None:
     client = Tendem(api_key="k", url="http://localhost:8931/mcp")
+    assert client.connection["url"] == "http://localhost:8931/mcp"
+
+
+def test_endpoint_is_overridable_via_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(URL_ENV_VAR, "http://staging.example/mcp")
+
+    assert Tendem(api_key="k").connection["url"] == "http://staging.example/mcp"
+
+
+def test_an_explicit_url_beats_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(URL_ENV_VAR, "http://staging.example/mcp")
+
+    client = Tendem(api_key="k", url="http://localhost:8931/mcp")
+
     assert client.connection["url"] == "http://localhost:8931/mcp"
 
 

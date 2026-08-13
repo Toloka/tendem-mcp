@@ -36,6 +36,7 @@ from langchain_tendem.constants import (
     TENDEM_MCP_URL,
     TRANSIENT_BACKOFF_BASE_SECONDS,
     TRANSIENT_BACKOFF_MAX_SECONDS,
+    URL_ENV_VAR,
 )
 from langchain_tendem.errors import (
     ApprovalBlockedError,
@@ -227,9 +228,10 @@ class Tendem:
             ``TENDEM_API_KEY`` env var. Required — the hosted server rejects
             unauthenticated calls, so a missing key fails here, at
             construction, rather than at the first call.
-        url: Endpoint override. The default carries the LangChain
-            attribution hash and package version — preserve the query params
-            if you change hosts.
+        url: Endpoint override; falls back to the ``TENDEM_MCP_URL``
+            environment variable, then the hosted default. The default
+            carries the LangChain attribution hash and package version —
+            preserve the query params if you change hosts.
         headers: Extra HTTP headers, merged over the auth header.
         timeout: HTTP timeout in seconds.
         sse_read_timeout: Transport read timeout; derived to safely exceed
@@ -255,7 +257,7 @@ class Tendem:
         self,
         *,
         api_key: str | None = None,
-        url: str = TENDEM_MCP_URL,
+        url: str | None = None,
         headers: dict[str, str] | None = None,
         timeout: float = DEFAULT_HTTP_TIMEOUT_SECONDS,
         sse_read_timeout: float | None = None,
@@ -269,7 +271,7 @@ class Tendem:
         sleeper: Callable[[float], Awaitable[None]] | None = None,
         clock: Callable[[], float] | None = None,
     ) -> None:
-        self.url = url
+        self.url = url or os.getenv(URL_ENV_VAR) or TENDEM_MCP_URL
         self.server_name = server_name
         self.max_price = max_price
         self.wait_for_change_seconds = wait_for_change_seconds
