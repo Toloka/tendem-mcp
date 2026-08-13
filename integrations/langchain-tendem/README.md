@@ -68,6 +68,13 @@ survives crashes and checkpoint replays.
 - **Limits:** briefs must be self-contained (the expert sees only the task
   text and files); data scraping is refused by Tendem policy; one unit of
   work per task.
+- **Write QA-proof briefs.** Tendem auto-generates strict pass/fail QA
+  criteria from your sentences, so state acceptance criteria explicitly and
+  keep each one checkable from the deliverable alone (structure, format,
+  presence of sections). Criteria the reviewer cannot verify — "values are
+  correct", "nothing was guessed" — cause endless rejections of good work;
+  say instead that unverifiable correctness must not be a rejection reason,
+  and prefer "use best judgment, flag uncertainty" over absolute bans.
 
 ## Programmatic use
 

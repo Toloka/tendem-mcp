@@ -47,7 +47,18 @@ class CreateTaskInput(BaseModel):
             "Complete, self-contained brief for the human expert: what to do "
             "or verify, every relevant fact inline, and what a good answer "
             "looks like. The expert sees only this text and the attached "
-            "files."
+            "files. IMPORTANT: the service auto-generates strict pass/fail QA "
+            "criteria from your sentences, so (1) state your own acceptance "
+            "criteria explicitly and make each one checkable from the "
+            "deliverable alone (structure, format, presence of sections) — "
+            "never criteria needing ground truth the QA reviewer lacks (e.g. "
+            "'values are transcribed correctly', 'nothing was guessed'); "
+            "(2) if correctness cannot be verified without external ground "
+            "truth, say so and instruct that it must not be a rejection "
+            "reason; (3) prefer 'use best judgment and flag uncertainty in "
+            "notes' over absolute bans like 'do not guess'; (4) allow "
+            "commentary around the deliverable rather than demanding an "
+            "exact-only output."
         )
     )
     file_paths: list[str] | None = Field(
