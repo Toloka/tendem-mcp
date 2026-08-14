@@ -100,10 +100,10 @@ prompted.
 
 ### Headless / agentic pipelines
 
-For programmatic use without interactive OAuth, authenticate with an API key
-from [agent.tendem.ai/tokens](https://agent.tendem.ai/tokens) via an
-`Authorization: ApiKey <token>` header on the same URL. See the README's
-"Build agentic pipelines" section.
+For programmatic use without interactive OAuth, authenticate with a Tendem
+API key (created at [agent.tendem.ai/mcp](https://agent.tendem.ai/mcp),
+"Agent builders" tab) via an `Authorization: ApiKey <token>` header on the
+same URL. See the README's "Build agentic pipelines" section.
 
 ## After install
 

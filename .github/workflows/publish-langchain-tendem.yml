@@ -1,0 +1,54 @@
+name: Publish langchain-tendem to PyPI
+
+# Release flow: bump `version` in integrations/langchain-tendem/pyproject.toml
+# on main, then push a matching tag:
+#
+#   git tag langchain-tendem-v0.2.0 && git push origin langchain-tendem-v0.2.0
+#
+# The job refuses to publish when the tag and pyproject version disagree.
+
+on:
+  push:
+    tags:
+      - "langchain-tendem-v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: integrations/langchain-tendem
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # The declared floor — if it passes here, it runs everywhere we claim.
+          python-version: "3.10"
+
+      - name: Install
+        run: python -m pip install -e '.[test]' build twine
+
+      - name: Test
+        run: python -m pytest
+
+      - name: Verify the tag matches the package version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#langchain-tendem-v}"
+          PKG_VERSION="$(python -c "from importlib.metadata import version; print(version('langchain-tendem'))")"
+          echo "tag=$TAG_VERSION package=$PKG_VERSION"
+          test "$TAG_VERSION" = "$PKG_VERSION"
+
+      - name: Build
+        run: |
+          rm -rf dist build
+          python -m build
+
+      - name: Check metadata
+        run: python -m twine check dist/*
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+          packages-dir: integrations/langchain-tendem/dist

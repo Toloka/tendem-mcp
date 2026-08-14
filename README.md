@@ -96,10 +96,18 @@ Add to your client's MCP config and sign in when prompted:
 ## Build agentic pipelines (API-key auth)
 
 For headless, CI, or programmatic use — where the interactive OAuth flow isn't
-viable — authenticate with an **API key** instead. Create a token at
-**[agent.tendem.ai/tokens](https://agent.tendem.ai/tokens)**.
+viable — authenticate with a Tendem **API key** instead: sign in at
+[agent.tendem.ai/mcp](https://agent.tendem.ai/mcp) and create one under the
+**Agent builders** tab.
 
-A native `"type": "http"` remote server triggers the interactive OAuth flow, so
+**Python / LangChain / LangGraph:** skip the raw MCP wiring and use
+[`langchain-tendem`](./integrations/langchain-tendem/) — four price-capped
+tools that let an agent create a task, answer the service's questions, and
+collect the verified result, with all polling in plain Python (no LLM, no
+tokens).
+
+For every other stack, a native `"type": "http"` remote server triggers the
+interactive OAuth flow, so
 to pass a static API key instead, bridge the connection through
 [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) — a local stdio process
 that connects to the hosted URL and injects your `Authorization: ApiKey` header:
