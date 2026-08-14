@@ -1,0 +1,47 @@
+[project]
+name = "ocr-batch"
+version = "0.1.0"
+description = "Batch document OCR with an LLM, escalating whatever it cannot read to a human expert via Tendem."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  "click>=8.1",
+  "langchain>=1.0,<2.0",
+  "langchain-openai>=1.0,<2.0",
+  "langchain-tendem>=0.2",
+  "pillow>=10.0",
+  "pypdfium2>=4.30",
+  "python-dotenv>=1.0",
+]
+
+[project.scripts]
+ocr-agentic = "ocr_batch.cli:agentic"      # one agent, five tools
+ocr-scripted = "ocr_batch.cli:scripted"    # same harness, plain code per document
+make-samples = "ocr_batch.common.samples:main"
+
+# Resolve from public PyPI explicitly, so the lock file works for anyone who
+# clones this — not only on a machine configured with a private index.
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
+[dependency-groups]
+dev = ["pytest>=8.0", "pytest-asyncio>=1.0", "ruff>=0.6"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ocr_batch"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
