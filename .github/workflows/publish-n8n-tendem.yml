@@ -40,7 +40,12 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install
-        run: npm ci
+        # --ignore-scripts skips native builds. The dev tree transitively pulls
+        # isolated-vm (via @n8n/node-cli -> @n8n/expression-runtime), whose C++
+        # compile is fragile across Node/compiler versions — and nothing lint or
+        # the tests run actually loads it. Verified: 85/85 tests and a clean
+        # lint against an --ignore-scripts install.
+        run: npm ci --ignore-scripts
 
       - name: Lint
         run: npm run lint
