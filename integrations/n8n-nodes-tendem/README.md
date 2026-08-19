@@ -23,23 +23,10 @@ policy.
 
 ## Installation
 
-**Self-hosted n8n, via the UI.** Go to **Settings → Community nodes → Install**,
-enter `n8n-nodes-tendem`, accept the risk prompt, and install. A **Tendem** node
-appears in the node panel.
+Go to **Settings → Community nodes → Install**, enter `n8n-nodes-tendem`, accept
+the risk prompt, and install. A **Tendem** node appears in the node panel.
 
-**Self-hosted n8n, via the CLI.** From your n8n user folder (`~/.n8n`):
-
-```bash
-cd ~/.n8n/nodes
-npm install n8n-nodes-tendem
-```
-
-Restart n8n afterwards.
-
-**Docker.** Set `N8N_COMMUNITY_PACKAGES_ENABLED=true` and install through the UI,
-or bake the package into a derived image under `/home/node/.n8n/nodes`.
-
-n8n's own guide: [Installing community
+Other setups are covered in n8n's own guide: [Installing community
 nodes](https://docs.n8n.io/integrations/community-nodes/installation/).
 
 ## Credentials
@@ -48,7 +35,8 @@ The node talks to Tendem's hosted MCP server over streamable HTTP. Authenticatio
 is an **API key**, sent as `Authorization: ApiKey <token>`.
 
 1. Sign in at [agent.tendem.ai](https://agent.tendem.ai).
-2. Mint a token at [agent.tendem.ai/tokens](https://agent.tendem.ai/tokens).
+2. Go to [agent.tendem.ai/mcp](https://agent.tendem.ai/mcp), open the **Agent
+   builders** tab, and click **Generate API key**.
 3. In n8n: **Credentials → New → Tendem API**, paste the token, save.
 
 Use n8n's **Test** button on the credential — it performs a real MCP `initialize`
@@ -254,18 +242,6 @@ is expected, and the confirming chat message settles it.
   ~350 lines, against the [Streamable HTTP
   transport](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports)
   spec — so there is nothing to audit but this repository.
-
-## Development
-
-```bash
-npm install
-npm run build     # tsc + copy icons and codex metadata into dist/
-npm test          # build, then the node:test suite
-npm run lint      # n8n's community-node lint, in strict/cloud mode
-npm run dev       # runs n8n locally with this node linked
-```
-
-Releasing is documented in [PUBLISHING.md](./PUBLISHING.md).
 
 ## Support
 
