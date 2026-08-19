@@ -1,9 +1,18 @@
 # Publishing `n8n-nodes-tendem`
 
-**Nothing here has been published.** No release was uploaded to npm from this
-working tree. Everything up to and including `npm pack --dry-run` was run and
-passed; `npm publish` was deliberately **not** run — it needs credentials, and a
-name + version pair on npm is permanent and cannot be reclaimed.
+**Published: [`0.1.0` is live on npm](https://www.npmjs.com/package/n8n-nodes-tendem)**
+(2026-08-19, with a provenance attestation, via
+`.github/workflows/publish-n8n-tendem.yml` on the `n8n-nodes-tendem-v0.1.0` tag).
+
+**Auth for future releases is trusted publishing (OIDC), not tokens.** The
+first publish used a one-shot npm token because OIDC cannot create a package
+that does not exist yet; both tokens were revoked immediately after. Before the
+next tag, the trusted publisher must be configured on the package's npm
+settings: org `Toloka`, repository `tendem-mcp`, workflow
+`publish-n8n-tendem.yml`, no environment. The workflow carries no
+`NODE_AUTH_TOKEN` and needs no secret.
+
+The rest of this document is the pre-release verification record.
 
 - Package name: **`n8n-nodes-tendem`**
 - Version to release first: **`0.1.0`**
@@ -202,4 +211,4 @@ script; the scaffold has none of those.
 | Documentation (README with auth + usage) | ✓ [README.md](./README.md) |
 | `n8n-node lint` clean in strict/cloud mode | ✓ 0 errors (2 deliberate icon warnings) |
 | MIT license | ✓ `package.json` + `LICENSE`, relicensed in `7954d17` |
-| Published via GitHub Actions with provenance | ✗ workflow ready (`publish-n8n-tendem.yml`), not yet published |
+| Published via GitHub Actions with provenance | ✓ 0.1.0, 2026-08-19, attestation verified in the registry |
