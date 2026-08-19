@@ -1,0 +1,64 @@
+name: Publish n8n-nodes-tendem to npm
+
+# Release flow: bump `version` in integrations/n8n-nodes-tendem/package.json on
+# main (and keep MCP_CLIENT_VERSION in transport.ts in sync — a test enforces
+# it), then push a matching tag:
+#
+#   git tag n8n-nodes-tendem-v0.1.0 && git push origin n8n-nodes-tendem-v0.1.0
+#
+# The job refuses to publish when the tag and package version disagree.
+#
+# Provenance matters here: n8n's verification guidelines require community
+# nodes to be published from GitHub Actions with a provenance statement
+# (mandatory since May 2026). `id-token: write` is what lets npm attach the
+# attestation; publishing this package from a laptop disqualifies it from
+# verification.
+
+on:
+  push:
+    tags:
+      - "n8n-nodes-tendem-v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: integrations/n8n-nodes-tendem
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # engines.node is >=20.19 (the floor @n8n/node-cli can run on); 22 is
+          # the current LTS above it.
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Verify the tag matches the package version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#n8n-nodes-tendem-v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          echo "tag=$TAG_VERSION package=$PKG_VERSION"
+          test "$TAG_VERSION" = "$PKG_VERSION"
+
+      - name: Inspect the tarball
+        run: npm pack --dry-run
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

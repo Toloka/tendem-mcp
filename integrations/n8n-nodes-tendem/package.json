@@ -1,0 +1,65 @@
+{
+	"name": "n8n-nodes-tendem",
+	"version": "0.1.0",
+	"description": "Delegate tasks to vetted human experts with Tendem — create a task, read the priced contract, approve the spend, poll, and fetch the result.",
+	"license": "MIT",
+	"homepage": "https://tendem.ai",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"tendem",
+		"human-in-the-loop",
+		"human-experts",
+		"outsourcing",
+		"mcp"
+	],
+	"author": {
+		"name": "Toloka AI BV",
+		"email": "support@tendem.ai",
+		"url": "https://tendem.ai"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Toloka/tendem-mcp.git",
+		"directory": "integrations/n8n-nodes-tendem"
+	},
+	"bugs": {
+		"url": "https://github.com/Toloka/tendem-mcp/issues"
+	},
+	"engines": {
+		"node": ">=20.19"
+	},
+	"scripts": {
+		"clean": "node scripts/clean.mjs",
+		"build": "tsc && node scripts/copy-assets.mjs",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"scan": "npx -y @n8n/scan-community-package n8n-nodes-tendem",
+		"test": "npm run build && node scripts/test.mjs",
+		"prepublishOnly": "npm run build && npm run test"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/TendemApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Tendem/Tendem.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.42.1",
+		"@types/node": "^20.19.0",
+		"n8n-workflow": "^2.16.0",
+		"typescript": "^5.9.3"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}
