@@ -156,9 +156,11 @@ Output carries `task_id` and `last_seen_offset`. Nothing is charged yet.
 
 **2. Task → Wait for Change.** Task ID `{{ $json.task_id }}`. This blocks until
 Tendem needs you. When `next_action` comes back `await_input`, Tendem asked a
-scoping question: read it with **Chat → Read** and answer with **Chat → Send**
-(pass the `last_seen_offset` through), then wait again. When `next_action` is
-`await_user_approval`, the quote is ready.
+scoping question: read it with **Chat → Read** and answer with **Chat → Send**,
+then wait again. Send figures out the conversation position on its own (that's
+the "Resolve Offset Automatically" toggle, on by default), so there is no offset
+to thread through the workflow. When `next_action` is `await_user_approval`, the
+quote is ready.
 
 **3. Task → Get Contract.** Returns the scope Tendem committed to
 (`task_description`, `criteria`) and the price. Scope is ready before the price
@@ -217,15 +219,28 @@ plausibly have blocked — a proxy that doesn't support long-polling, say — th
 sleeps before the next one, honouring Tendem's `poll_after_seconds` hint. A
 misbehaving endpoint degrades to a paced poll, never to a hot loop.
 
+Transient failures are absorbed too: read operations retry a
+`TEMPORARILY_UNAVAILABLE`, a 5xx, or a dropped connection with backoff (up to 5
+attempts) instead of failing the workflow, so an hours-long expert wait survives
+the blips it will inevitably see. Operations that write — Create, Send, Approve —
+are never retried, because repeating them could duplicate a task, a message, or
+a charge.
+
 ## Attaching input files
 
 Uploads need a `task_id`, so they can only happen *after* Create.
 
 1. **File → Get Upload URL** with the task ID. You get a short-lived, folder-level
    pre-signed URL.
-2. For each file, append its name to the path **before** the query string —
-   `<base>/<filename>?<query>` — and `PUT` the raw bytes with an HTTP Request
-   node. Keep names simple; avoid spaces. Subpaths like `data/input.csv` are fine.
+2. For each file, build the PUT URL from the folder URL and upload with an HTTP
+   Request node:
+   - swap the host from `.dfs.core.windows.net` to `.blob.core.windows.net`,
+   - append the file name to the path **before** the query string —
+     `<base>/<filename>?<query>`,
+   - `PUT` the raw bytes with the header `x-ms-blob-type: BlockBlob`.
+
+   All three matter: a `PUT` to the URL exactly as returned fails with HTTP 400.
+   Keep names simple; avoid spaces. Subpaths like `data/input.csv` are fine.
 3. **Chat → Send** naming the files you uploaded, e.g.
    `I've uploaded brief.pdf and data/input.csv for this task.` Tendem waits for
    this message; without it the expert never sees the files.
