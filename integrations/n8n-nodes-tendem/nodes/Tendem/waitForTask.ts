@@ -14,24 +14,13 @@ import { TENDEM_TOOLS, type ToolCaller } from './tools';
 
 /**
  * `next_action` is authoritative over the raw status — the Tendem server says so. This is the one
- * value that means "Tendem is still working, come back later".
+ * value that means "Tendem is still working, come back later"; every other value (await_input,
+ * await_user_approval, await_user_topup, resolve_race, fetch_result, done) settles the wait.
  */
 export const WAITING_NEXT_ACTION = 'awaiting_tendem_work';
 
-/** `next_action` values that end the wait: something needs the user, or the work is done. */
-export const SETTLING_NEXT_ACTIONS = [
-	'await_input',
-	'await_user_approval',
-	'await_user_topup',
-	'fetch_result',
-	'done',
-] as const;
-
 /** Fallback signal when the envelope carries no `next_action`. */
 export const ACTIVE_STATUS = 'ACTING';
-
-/** Task statuses. `CLOSED` is terminal but the result is still fetchable. */
-export const TASK_STATUSES = ['ACTING', 'LISTENING', 'NEEDS_REPAIR', 'CLOSED', 'DELETED'] as const;
 
 /** `wait_for_change_seconds` is capped at 30 by the Tendem API. */
 export const DEFAULT_WAIT_FOR_CHANGE_SECONDS = 30;

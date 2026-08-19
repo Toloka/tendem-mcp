@@ -158,3 +158,10 @@ test('a guard constructed with an empty allowlist permits nothing', async () => 
 	}
 	assert.equal(inner.calls.length, 0);
 });
+
+test('the MCP client version constant matches package.json', () => {
+	const { MCP_CLIENT_VERSION, MCP_CLIENT_NAME } = require('../dist/nodes/Tendem/transport.js');
+	const pkg = require('../package.json');
+	assert.equal(MCP_CLIENT_VERSION, pkg.version);
+	assert.equal(MCP_CLIENT_NAME, pkg.name);
+});

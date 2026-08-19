@@ -7,7 +7,7 @@ name + version pair on npm is permanent and cannot be reclaimed.
 
 - Package name: **`n8n-nodes-tendem`**
 - Version to release first: **`0.1.0`**
-- License in `package.json`: MIT — **see the open question below**
+- License in `package.json` and `LICENSE`: MIT (relicensed in `7954d17`)
 - Requires: Node.js >= 20.19
 
 Name availability as checked from this machine on 2026-08-06:
@@ -80,34 +80,35 @@ Those tests were **mutation-checked**: neutering the Confirm Spend condition in
 the compiled output made exactly the three approval tests fail, so they are not
 vacuous.
 
-## 1. Open question before release: the license
+## 1. The license question is resolved
 
-`npm run lint` has exactly one remaining error:
-
-```
-package.json
-  1:1  error  Update the `license` key to MIT in package.json
-             n8n-nodes-base/community-package-json-license-not-default
-```
-
-This is real, not a lint quirk. n8n's [verification
+Earlier revisions of this document tracked one open lint error: the package
+originally declared Apache-2.0, which n8n's [verification
 guidelines](https://docs.n8n.io/connect/create-nodes/build-your-node/reference/verification-guidelines)
-say: *"Make sure your package license is MIT."*
+reject (*"Make sure your package license is MIT"*). Commit `7954d17` relicensed
+the integration packages to MIT — both `package.json` and `LICENSE` in this
+directory — so the blocker no longer exists.
 
-This package currently declares **MIT**, matching the rest of the
-`tendem-mcp` repository and its sibling `langchain-tendem`. Relicensing is a legal
-decision, not a lint fix, so it was left alone. Someone with authority has to pick
-one:
+Re-verified on 2026-08-19 (Node 26.2.0, after an `npm install` to sync the
+lockfile — see below):
 
-- **Keep MIT.** The package still publishes and installs normally as an
-  unverified community node. It will not pass n8n's verification review, so it
-  won't appear in n8n Cloud's node panel or the verified list.
-- **Relicense this package to MIT.** Clears verification. Requires a deliberate
-  decision from Toloka AI BV, and `LICENSE` in this directory must be swapped to
-  match `package.json`.
+```
+npm run lint   ->  0 errors, 2 warnings
+npm test       ->  85 passed, 0 failed
+```
 
-Until that is settled, `npm run lint` exits non-zero. `prepublishOnly` runs build
-and test only, so it does not block a publish on this.
+The two warnings are both `icon-prefer-themed-variants`, on the node and the
+credential. They are deliberate: the brand-consolidation commit (`f01f2a7`)
+dropped the dark icon variant because the mark is a dark container with a white
+glyph that reads on either theme. Warnings do not fail lint.
+
+One trap fixed along the way: `package-lock.json` had drifted from
+`package.json` (a missing `ignore@7.0.6` entry), so `npm ci` — which the publish
+workflow uses — failed until `npm install` re-synced it. Separately, if lint
+dies with `ERR_REQUIRE_ESM` (via `change-case`), that is the Node < 20.19 trap
+from §0 — check `node --version` actually resolves to >= 20.19 before debugging
+anything else; on this machine fnm prints a 26.x banner even when the `node` on
+PATH is still 20.18.
 
 ## 2. Publish to npm
 
@@ -136,27 +137,19 @@ enough. Per n8n's submission docs: *"From May 1st 2026, nodes submitted for
 verification must be published using GitHub Actions with a provenance
 statement."* Publishing from a laptop disqualifies the release.
 
-That means a workflow in `Toloka/tendem-mcp` along these lines, with
-`id-token: write` so npm can attach the provenance attestation:
+That workflow now exists:
+[`.github/workflows/publish-n8n-tendem.yml`](../../.github/workflows/publish-n8n-tendem.yml).
+It triggers on a `n8n-nodes-tendem-v*` tag, runs `npm ci` + lint + test, refuses
+to publish when the tag and `package.json` version disagree, and publishes with
+`--provenance --access public`. It needs the `NPM_TOKEN` repository secret set to
+an npm automation token that can publish this package.
 
-```yaml
-permissions:
-  contents: read
-  id-token: write
-steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-node@v4
-    with:
-      node-version: 22
-      registry-url: https://registry.npmjs.org
-  - run: npm ci
-    working-directory: integrations/n8n-nodes-tendem
-  - run: npm test
-    working-directory: integrations/n8n-nodes-tendem
-  - run: npm publish --provenance --access public
-    working-directory: integrations/n8n-nodes-tendem
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+So the release procedure is: bump `version` in `package.json` (the
+`MCP_CLIENT_VERSION` constant in `transport.ts` must match — a test fails
+otherwise), merge to main, then:
+
+```bash
+git tag n8n-nodes-tendem-v0.1.0 && git push origin n8n-nodes-tendem-v0.1.0
 ```
 
 `@n8n/node-cli` also ships `n8n-node release`, which wraps the same flow with
@@ -205,8 +198,8 @@ script; the scaffold has none of those.
 | `n8nNodesApiVersion: 1` | ✓ |
 | No runtime dependencies | ✓ `dependencies` is absent; only `devDependencies` and a `peerDependencies` on `n8n-workflow` |
 | Author with a non-empty email | ✓ `Toloka AI BV <support@tendem.ai>` |
-| Node and credential both carry icons | ✓ light + dark SVG variants |
+| Node and credential both carry icons | ✓ one theme-proof SVG, shared (dark variant deliberately dropped in `f01f2a7`) |
 | Documentation (README with auth + usage) | ✓ [README.md](./README.md) |
-| `n8n-node lint` clean in strict/cloud mode | ✗ one error — the license, above |
-| MIT license | ✗ MIT — decision pending |
-| Published via GitHub Actions with provenance | ✗ not yet published at all |
+| `n8n-node lint` clean in strict/cloud mode | ✓ 0 errors (2 deliberate icon warnings) |
+| MIT license | ✓ `package.json` + `LICENSE`, relicensed in `7954d17` |
+| Published via GitHub Actions with provenance | ✗ workflow ready (`publish-n8n-tendem.yml`), not yet published |

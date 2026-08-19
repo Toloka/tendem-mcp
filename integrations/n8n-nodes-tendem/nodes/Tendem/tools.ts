@@ -29,6 +29,23 @@ export const SPEND_COMMITTING_TOOLS: readonly TendemToolName[] = [TENDEM_TOOLS.A
 export const SPEND_OPERATION_KEY = 'task:approve';
 
 /**
+ * Tools that are safe to repeat: pure reads, plus `cancel_task` and `get_file_upload_url`, which
+ * only mint URLs and mutate nothing. Everything else — `create_task`, `send_message`,
+ * `approve_task` — can duplicate a task, a message, or a charge when retried, so the transient
+ * retry in {@link ../retry} refuses to touch them.
+ */
+export const IDEMPOTENT_TOOLS: readonly TendemToolName[] = [
+	TENDEM_TOOLS.GET_TASK,
+	TENDEM_TOOLS.GET_CONTRACT,
+	TENDEM_TOOLS.CANCEL_TASK,
+	TENDEM_TOOLS.GET_TASK_RESULT,
+	TENDEM_TOOLS.LIST_TASKS,
+	TENDEM_TOOLS.READ_CHAT,
+	TENDEM_TOOLS.GET_ACCOUNT,
+	TENDEM_TOOLS.GET_FILE_UPLOAD_URL,
+];
+
+/**
  * Per-operation capability allowlist.
  *
  * This is the structural half of the "never approve spend implicitly" guarantee: each operation
@@ -46,7 +63,9 @@ export const OPERATION_TOOL_ALLOWLIST: Readonly<Record<string, readonly TendemTo
 	'task:getResult': [TENDEM_TOOLS.GET_TASK_RESULT],
 	'task:list': [TENDEM_TOOLS.LIST_TASKS],
 	'chat:read': [TENDEM_TOOLS.READ_CHAT],
-	'chat:send': [TENDEM_TOOLS.SEND_MESSAGE],
+	// Send may also read: resolving the live offset before sending is how it avoids the silent
+	// "race" drop when Tendem posted new content first.
+	'chat:send': [TENDEM_TOOLS.SEND_MESSAGE, TENDEM_TOOLS.READ_CHAT],
 	'account:get': [TENDEM_TOOLS.GET_ACCOUNT],
 	'file:getUploadUrl': [TENDEM_TOOLS.GET_FILE_UPLOAD_URL],
 };

@@ -218,7 +218,7 @@ test('an HTTP 401 produces an actionable credential error', async () => {
 	await assert.rejects(async () => await session.callTool('get_account', {}), (error) => {
 		assert.ok(error instanceof McpError);
 		assert.match(error.message, /HTTP 401/);
-		assert.match(error.message, /agent\.tendem\.ai\/tokens/);
+		assert.match(error.message, /agent\.tendem\.ai\/mcp/);
 		return true;
 	});
 });

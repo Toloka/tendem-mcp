@@ -27,6 +27,7 @@ import {
 	type McpHttpRequestOptions,
 	type McpHttpResponse,
 } from './transport';
+import { RetryingToolCaller } from './retry';
 import { guardFor, operationKey, TENDEM_TOOLS, type ToolCaller } from './tools';
 import { waitForTaskChange } from './waitForTask';
 
@@ -84,6 +85,9 @@ export class Tendem implements INodeType {
 			)) as McpHttpResponse;
 
 		const session = new McpSession(requester, { endpoint });
+		// Transient failures (TEMPORARILY_UNAVAILABLE, 5xx, dropped connections) are retried with
+		// backoff — but only for idempotent reads; writes surface their failures immediately.
+		const retrying = new RetryingToolCaller(session, { sleep });
 
 		for (let i = 0; i < items.length; i += 1) {
 			try {
@@ -93,7 +97,7 @@ export class Tendem implements INodeType {
 
 				// Each item runs against a capability-scoped caller. `approve_task` is unreachable
 				// from every operation except `task:approve`.
-				const guarded: ToolCaller = guardFor(session, key);
+				const guarded: ToolCaller = guardFor(retrying, key);
 
 				const payload = await runOperation.call(this, guarded, key, i);
 
@@ -175,7 +179,7 @@ async function runOperation(
 
 		case 'task:list':
 			return await guarded.callTool(TENDEM_TOOLS.LIST_TASKS, {
-				limit: this.getNodeParameter('limit', i, 10) as number,
+				limit: this.getNodeParameter('limit', i, 50) as number,
 				offset: this.getNodeParameter('offset', i, 0) as number,
 			});
 
@@ -205,11 +209,7 @@ async function runOperation(
 			});
 
 		case 'chat:send':
-			return await guarded.callTool(TENDEM_TOOLS.SEND_MESSAGE, {
-				task_id: this.getNodeParameter('taskId', i) as string,
-				text: this.getNodeParameter('text', i) as string,
-				last_seen_offset: this.getNodeParameter('lastSeenOffset', i, 0) as number,
-			});
+			return await sendChatMessage.call(this, guarded, i);
 
 		case 'account:get':
 			return await guarded.callTool(TENDEM_TOOLS.GET_ACCOUNT, {});
@@ -224,6 +224,58 @@ async function runOperation(
 				itemIndex: i,
 			});
 	}
+}
+
+/**
+ * Sends a chat message without falling into the silent-drop race.
+ *
+ * `send_message` refuses delivery when Tendem posted new content after the offset the caller last
+ * saw (`response_type: "race"`) — correct protocol behaviour, but a workflow that hardcodes
+ * `last_seen_offset: 0` would silently lose every reply after the first exchange. By default the
+ * node therefore reads the chat first and sends at the live offset, and if Tendem still races it
+ * (something arrived in the window between read and send), it re-resolves and re-sends once. A
+ * second race in a row is surfaced as data — `response_type: "race"` with the missed messages —
+ * because at that point the conversation has moved and the author should see what changed before
+ * insisting. Turning "Resolve Offset Automatically" off restores fully manual offset threading.
+ */
+async function sendChatMessage(
+	this: IExecuteFunctions,
+	guarded: ToolCaller,
+	i: number,
+): Promise<IDataObject> {
+	const taskId = this.getNodeParameter('taskId', i) as string;
+	const text = this.getNodeParameter('text', i) as string;
+	const autoOffset = this.getNodeParameter('autoOffset', i, true) as boolean;
+
+	const latestOffset = async (): Promise<number> => {
+		const chat = await guarded.callTool(TENDEM_TOOLS.READ_CHAT, {
+			task_id: taskId,
+			from_offset: 0,
+		});
+		return typeof chat.last_seen_offset === 'number' ? chat.last_seen_offset : 0;
+	};
+
+	let offset = autoOffset
+		? await latestOffset()
+		: (this.getNodeParameter('lastSeenOffset', i, 0) as number);
+
+	let response = await guarded.callTool(TENDEM_TOOLS.SEND_MESSAGE, {
+		task_id: taskId,
+		text,
+		last_seen_offset: offset,
+	});
+
+	if (autoOffset && response.response_type === 'race') {
+		offset =
+			typeof response.last_seen_offset === 'number' ? response.last_seen_offset : await latestOffset();
+		response = await guarded.callTool(TENDEM_TOOLS.SEND_MESSAGE, {
+			task_id: taskId,
+			text,
+			last_seen_offset: offset,
+		});
+	}
+
+	return response;
 }
 
 /**

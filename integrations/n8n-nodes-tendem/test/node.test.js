@@ -313,3 +313,89 @@ test('a Tendem tool failure surfaces the server message', async () => {
 		},
 	);
 });
+
+test('chat send resolves the live offset first by default', async () => {
+	const { server } = await execute(
+		{ resource: 'chat', operation: 'send', taskId: TASK_ID, text: 'hello' },
+		{
+			toolHandler: ({ name }) =>
+				name === 'read_chat'
+					? { messages: [], last_seen_offset: 7 }
+					: { response_type: 'sync', last_seen_offset: 8 },
+		},
+	);
+
+	assert.deepEqual(server.names(), ['read_chat', 'send_message']);
+	assert.equal(server.toolCalls[1].args.last_seen_offset, 7);
+});
+
+test('a race on send is resolved by re-sending once at the offset the race reported', async () => {
+	let sends = 0;
+	const { output, server } = await execute(
+		{ resource: 'chat', operation: 'send', taskId: TASK_ID, text: 'hello' },
+		{
+			toolHandler: ({ name }) => {
+				if (name === 'read_chat') return { messages: [], last_seen_offset: 3 };
+				sends += 1;
+				return sends === 1
+					? { response_type: 'race', last_seen_offset: 12, messages: [{ text: 'missed' }] }
+					: { response_type: 'sync', last_seen_offset: 13 };
+			},
+		},
+	);
+
+	assert.equal(server.countOf('send_message'), 2);
+	assert.equal(server.toolCalls.at(-1).args.last_seen_offset, 12);
+	assert.equal(output[0].json.response_type, 'sync');
+});
+
+test('a second race in a row is surfaced as data, not retried forever', async () => {
+	const { output, server } = await execute(
+		{ resource: 'chat', operation: 'send', taskId: TASK_ID, text: 'hello' },
+		{
+			toolHandler: ({ name }) =>
+				name === 'read_chat'
+					? { messages: [], last_seen_offset: 3 }
+					: { response_type: 'race', last_seen_offset: 20, messages: [] },
+		},
+	);
+
+	assert.equal(server.countOf('send_message'), 2);
+	assert.equal(output[0].json.response_type, 'race');
+});
+
+test('manual offset threading still works with auto-resolve off', async () => {
+	const { server } = await execute(
+		{
+			resource: 'chat',
+			operation: 'send',
+			taskId: TASK_ID,
+			text: 'hello',
+			autoOffset: false,
+			lastSeenOffset: 5,
+		},
+		{ toolHandler: () => ({ response_type: 'sync', last_seen_offset: 6 }) },
+	);
+
+	assert.deepEqual(server.names(), ['send_message']);
+	assert.equal(server.toolCalls[0].args.last_seen_offset, 5);
+});
+
+test('a transient blip during a wait is retried instead of failing the workflow', async () => {
+	let calls = 0;
+	const { output, server } = await execute(
+		{ resource: 'task', operation: 'wait', taskId: TASK_ID, waitForChangeSeconds: 5, maxRounds: 3 },
+		{
+			toolHandler: () => {
+				calls += 1;
+				if (calls === 1) {
+					return { __isError: 'Tool failed (TEMPORARILY_UNAVAILABLE): blip, retry shortly' };
+				}
+				return { task_id: TASK_ID, status: 'LISTENING', next_action: 'fetch_result' };
+			},
+		},
+	);
+
+	assert.equal(server.countOf('get_task'), 2);
+	assert.equal(output[0].json.tendemWait.settled, true);
+});

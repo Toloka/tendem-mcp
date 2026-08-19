@@ -6,8 +6,12 @@ import type {
 	INodeProperties,
 } from 'n8n-workflow';
 
-/** Default Tendem MCP endpoint, including the n8n attribution hash. */
-const TENDEM_DEFAULT_ENDPOINT = 'https://mcp.tendem.ai/mcp?utm_hash=83dad40a52';
+import {
+	MCP_CLIENT_NAME,
+	MCP_CLIENT_VERSION,
+	MCP_PROTOCOL_VERSION,
+	TENDEM_DEFAULT_ENDPOINT,
+} from '../nodes/Tendem/transport';
 
 export class TendemApi implements ICredentialType {
 	name = 'tendemApi';
@@ -32,7 +36,7 @@ export class TendemApi implements ICredentialType {
 			default: '',
 			required: true,
 			description:
-				'Tendem API key. Create one at https://agent.tendem.ai/tokens. Sent as the "Authorization: ApiKey <token>" header.',
+				'Tendem API key. Create one at https://agent.tendem.ai/mcp, on the "Agent builders" tab. Sent as the "Authorization: ApiKey <token>" header.',
 		},
 		{
 			displayName: 'MCP Endpoint',
@@ -68,9 +72,9 @@ export class TendemApi implements ICredentialType {
 				id: 1,
 				method: 'initialize',
 				params: {
-					protocolVersion: '2025-06-18',
+					protocolVersion: MCP_PROTOCOL_VERSION,
 					capabilities: {},
-					clientInfo: { name: 'n8n-nodes-tendem', version: '0.1.0' },
+					clientInfo: { name: MCP_CLIENT_NAME, version: MCP_CLIENT_VERSION },
 				},
 			},
 		},

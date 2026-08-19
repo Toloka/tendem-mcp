@@ -43,11 +43,15 @@ export class McpError extends Error {
 
 	readonly data?: unknown;
 
-	constructor(message: string, code?: number, data?: unknown) {
+	/** HTTP status of the failing response, when the failure was an HTTP-level one. */
+	readonly httpStatus?: number;
+
+	constructor(message: string, code?: number, data?: unknown, httpStatus?: number) {
 		super(message);
 		this.name = 'McpError';
 		this.code = code;
 		this.data = data;
+		this.httpStatus = httpStatus;
 	}
 }
 
@@ -327,12 +331,13 @@ export class McpSession {
 						: '';
 			const hint =
 				status === 401 || status === 403
-					? ' Check the API key on the Tendem credential (create one at https://agent.tendem.ai/tokens).'
+					? ' Check the API key on the Tendem credential (create one at https://agent.tendem.ai/mcp, "Agent builders" tab).'
 					: '';
 			throw new McpError(
 				`Tendem MCP "${method}" failed (HTTP ${status})${detail !== '' ? `: ${detail}` : ''}.${hint}`,
 				typeof rpcError?.code === 'number' ? rpcError.code : undefined,
 				rpcError?.data,
+				status,
 			);
 		}
 

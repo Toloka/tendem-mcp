@@ -309,12 +309,23 @@ export const chatFields: INodeProperties[] = [
 		description: 'Message text to send to the Tendem orchestrator',
 	},
 	{
+		displayName: 'Resolve Offset Automatically',
+		name: 'autoOffset',
+		type: 'boolean',
+		default: true,
+		displayOptions: showFor('chat', ['send']),
+		description:
+			'Whether to read the chat first and send at the live offset, re-sending once if Tendem posts new content concurrently. Turn off to thread "last_seen_offset" through the workflow by hand.',
+	},
+	{
 		displayName: 'Last Seen Offset',
 		name: 'lastSeenOffset',
 		type: 'number',
 		default: 0,
 		typeOptions: { minValue: 0 },
-		displayOptions: showFor('chat', ['send']),
+		displayOptions: {
+			show: { resource: ['chat'], operation: ['send'], autoOffset: [false] },
+		},
 		description:
 			'The "last_seen_offset" from the previous Create, Send, or Read call. 0 for a brand-new task. If Tendem posted new content first, the response comes back with response_type "race" and the message is not delivered — re-send with the new offset.',
 	},
@@ -333,7 +344,7 @@ export const fileFields: INodeProperties[] = [
 	},
 	{
 		displayName:
-			'The returned "upload_url" is a folder URL. Append each file name to the path before the query string — <base>/<filename>?<query> — and PUT the raw bytes. Then use Chat → Send to name the files you uploaded, or Tendem will keep waiting for them.',
+			'The returned "upload_url" is a folder URL on the ".dfs.core.windows.net" host. For each file: swap that host to ".blob.core.windows.net", append the file name to the path before the query string — <base>/<filename>?<query> — and PUT the raw bytes with the header "x-ms-blob-type: BlockBlob". A PUT to the URL exactly as returned fails with HTTP 400. Then use Chat → Send to name the files you uploaded, or Tendem will keep waiting for them.',
 		name: 'uploadNotice',
 		type: 'notice',
 		default: '',
