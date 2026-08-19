@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-tendem",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Delegate tasks to vetted human experts with Tendem — create a task, read the priced contract, approve the spend, poll, and fetch the result.",
 	"license": "MIT",
 	"homepage": "https://tendem.ai",
