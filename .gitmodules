@@ -1,0 +1,3 @@
+[submodule "integrations/n8n-nodes-tendem"]
+	path = integrations/n8n-nodes-tendem
+	url = https://github.com/Toloka/n8n-nodes-tendem.git
