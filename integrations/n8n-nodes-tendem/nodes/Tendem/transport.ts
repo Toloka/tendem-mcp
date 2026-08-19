@@ -14,7 +14,7 @@ import type { IDataObject } from 'n8n-workflow';
 
 export const MCP_PROTOCOL_VERSION = '2025-06-18';
 export const MCP_CLIENT_NAME = 'n8n-nodes-tendem';
-export const MCP_CLIENT_VERSION = '0.1.0';
+export const MCP_CLIENT_VERSION = '0.1.1';
 
 /** Default Tendem MCP endpoint, including the n8n attribution hash. */
 export const TENDEM_DEFAULT_ENDPOINT = 'https://mcp.tendem.ai/mcp?utm_hash=83dad40a52';

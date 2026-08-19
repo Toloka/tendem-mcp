@@ -32,15 +32,14 @@ import { guardFor, operationKey, TENDEM_TOOLS, type ToolCaller } from './tools';
 import { waitForTaskChange } from './waitForTask';
 
 /**
- * `usableAsTool` is omitted on purpose, and the omission is the guardrail.
- *
- * Tool exposure is all-or-nothing per node: n8n types the flag `true | { replacements }` — there is
- * no form of it that withholds a single operation. Enabling it would therefore hand an AI agent the
- * "Approve (Spends Money)" operation, the one operation that charges the Tendem account. Spend is a
- * workflow author's decision, not a model's, so this node stays off the tool surface. An agent that
- * needs the read-only parts (create, get, contract, result) can reach the Tendem MCP server direct.
+ * `usableAsTool` is enabled: an AI agent can drive Tendem like any other paid-service node — the
+ * same trust model as the LLM and HTTP nodes, where wiring a credential is the consent to spend
+ * against it. Scoping and chatting are free; the one operation that charges the account is still
+ * behind its own gates even for an agent: `approve_task` is reachable only from Task → Approve
+ * (capability allowlist), which refuses unless `confirmSpend` is explicitly true and the quoted
+ * price was passed through — so a spend is always a deliberate, logged, named-amount decision,
+ * never a side effect.
  */
-// eslint-disable-next-line @n8n/community-nodes/node-usable-as-tool -- deliberate: enabling it would expose approve_task, which spends real money, to an LLM
 export class Tendem implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Tendem',
@@ -51,7 +50,7 @@ export class Tendem implements INodeType {
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Delegate work to vetted human experts through Tendem',
 		defaults: { name: 'Tendem' },
-		// No `usableAsTool` here — see the note on the class.
+		usableAsTool: true,
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'tendemApi', required: true }],

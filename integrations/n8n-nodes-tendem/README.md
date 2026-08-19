@@ -114,14 +114,18 @@ auto-approves this task, so don't call Approve again afterwards.
 
 On success you get `approved: true`, `spendBlocked: false`, `topupUrl: null`.
 
-### Why the node isn't available as an AI Agent tool
+### Using the node as an AI Agent tool
 
-n8n's `usableAsTool` is all-or-nothing per node — there is no form of it that
-exposes some operations and withholds others. Turning it on would hand a model
-the Approve operation. Spend is a workflow author's decision, so this node stays
-off the AI tool surface. An agent that needs the read-only parts can talk to the
-[Tendem MCP server](https://github.com/Toloka/tendem-mcp) directly, where the
-host application owns the approval gate.
+The node is available to n8n AI Agents (`usableAsTool`), under the same trust
+model as any paid-service node: wiring a credential is the consent to spend
+against it, exactly as with an LLM node billing an API key. The difference is
+that Tendem spend can never be a side effect — even for an agent, the Approve
+operation demands an explicit `confirmSpend: true` and the quoted price passed
+through, so every charge is a deliberate, named-amount decision that shows up in
+the execution log. Creating, scoping, chatting, and reading results are free, so
+an agent can drive the whole task lifecycle and leave the one paid click to
+whatever policy your workflow sets — its own judgment, a spend cap expression,
+or a human gate upstream.
 
 ## Worked example: research brief, end to end
 
