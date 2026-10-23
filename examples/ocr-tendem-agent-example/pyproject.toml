@@ -10,7 +10,7 @@ dependencies = [
   "langchain>=1.0,<2.0",
   "langchain-openai>=1.0,<2.0",
   "langchain-tendem>=0.2",
-  "pillow>=10.0",
+  "pillow>=13.0.0",
   "pypdfium2>=4.30",
   "python-dotenv>=1.0",
 ]
